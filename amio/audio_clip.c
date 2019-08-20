@@ -1,0 +1,33 @@
+#include "audio_clip.h"
+
+#include <stdlib.h>
+#include <string.h>
+#include "communication.h"
+
+struct AudioClip * AudioClip_init(
+    char *bytes, int n, int channels, float framerate)
+{
+    /* Runs on the Python thread */
+
+    struct AudioClip *result;
+    result = malloc(sizeof(struct AudioClip));
+    result->referenced_by_python = true;
+    result->length = n / (sizeof(int16_t) * channels);
+    result->channels = channels;
+    result->framerate = framerate;
+    result->data = (int16_t *)malloc(n);
+    memcpy(result->data, bytes, n);
+    return result;
+}
+
+void AudioClip_del(
+    struct JackInterface *jack_interface, struct AudioClip *clip)
+{
+    /* Runs on the Python thread */
+
+    if (!send_message_with_ptr(
+            &(jack_interface->interface.io_thread_queue),
+            MSG_UNREF_AUDIO_CLIP, clip)) {
+        // TODO handle failure
+    }
+}
