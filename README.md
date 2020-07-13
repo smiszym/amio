@@ -50,9 +50,11 @@ quality is: frame rate of 44100 Hz, 2 channels, 16-bit samples.
 ## Third-party code
 
 Ring buffer implementation comes from the PortAudio project. It's in the files
+
  * amio/pa_ringbuffer.h
  * amio/pa_ringbuffer.c
  * amio/pa_memorybarrier.h
+
 copied directly from PortAudio source code (from src/common)
 at Git tag pa_stable_v190600_20161030, which is the recommended stable release
 of PortAudio while I'm writing this.
