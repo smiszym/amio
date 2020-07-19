@@ -183,6 +183,23 @@ class AudioClip:
             y = [factor_to_dB(np.sqrt(np.mean(self._array ** 2)))]
         return x, y
 
+    def resize(self, new_length):
+        """
+        Resize the clip in-place (although the underlying NumPy array object
+        will be changed to a new object). Will lose data if the new length
+        is less than the current length.
+        """
+        assert self.writeable
+        current_length = len(self)
+        if new_length == current_length:
+            pass
+        elif new_length < current_length:
+            self._array = self._array[:new_length]
+        else:
+            self._array = np.concatenate((
+                self._array,
+                np.zeros((new_length - current_length, self.channels))))
+
     def open_in_audacity(self):
         """
         A utility method that creates a temporary file, writes the audio

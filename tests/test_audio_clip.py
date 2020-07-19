@@ -39,3 +39,17 @@ def test_stereo_audio_clip_concatenate():
     assert result.frame_rate == 48000
     assert len(result) == 400
     assert result.channels == 2
+
+
+def test_resize_downwards():
+    clip = AudioClip(np.zeros((100, 2), np.float32), 48000)
+    clip.resize(50)
+    assert clip.channels == 2
+    assert len(clip) == 50
+
+
+def test_resize_upwards():
+    clip = AudioClip(np.zeros((100, 2), np.float32), 48000)
+    clip.resize(150)
+    assert clip.channels == 2
+    assert len(clip) == 150
