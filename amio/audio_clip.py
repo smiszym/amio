@@ -225,6 +225,10 @@ class AudioClip:
         plt.show()
 
     @staticmethod
+    def zeros(length, channels, frame_rate):
+        return AudioClip(np.zeros((length, channels), np.float32), frame_rate)
+
+    @staticmethod
     def from_au_file(filename):
         with open(filename, 'rb') as file:
             data = file.read()
