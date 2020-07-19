@@ -118,7 +118,8 @@ class AudioClip:
     def channel(self, channel_number):
         return AudioClip(self._array[:,channel_number], self.frame_rate)
 
-    def overwrite(self, patch_clip, position, clip_a=0, clip_b=-1):
+    def overwrite(self, patch_clip, position, clip_a=0, clip_b=-1,
+                  extend_to_fit=False):
         """
         Overwrite part of this audio clip with patch_clip. By default
         the whole patch_clip is put onto this audio clip, but this can be
@@ -128,6 +129,8 @@ class AudioClip:
         :param position: Position in frames at which to put the clip.
         :param clip_a: Starting frame of the patch clip.
         :param clip_b: End frame of the patch clip.
+        :param extend_to_fit: If True, the clip will be resized if too small
+        to contain the clip being inserted.
         """
         assert patch_clip.channels == self.channels
         if clip_b == -1:
@@ -135,12 +138,15 @@ class AudioClip:
         inserted_length = clip_b - clip_a
         if inserted_length < 0:
             return
-        if position > len(self):
+        if position > len(self) and not extend_to_fit:
             return
         if position + inserted_length > len(self):
-            to_cut = position + inserted_length - len(self)
-            inserted_length -= to_cut
-            clip_b -= to_cut
+            if extend_to_fit:
+                self.resize(position + inserted_length)
+            else:
+                to_cut = position + inserted_length - len(self)
+                inserted_length -= to_cut
+                clip_b -= to_cut
         self._array[position:position+inserted_length,:] = (
             patch_clip._array[clip_a:clip_b,:])
 
