@@ -49,17 +49,17 @@ class AudioClip:
         assert np.issubdtype(array.dtype, np.floating)
         if len(array.shape) == 1:
             # Mono audio
-            self.array = np.reshape(array, (array.shape[0], 1))
+            self._array = np.reshape(array, (array.shape[0], 1))
         elif len(array.shape) == 2:
             # Multichannel audio (mono, stereo, or more)
-            self.array = array
+            self._array = array
         else:
             raise ValueError("Incorrect array shape (must be 1D or 2D)")
         self.frame_rate = frame_rate
         self._immutable_clip_data = None
 
     def __len__(self):
-        return self.array.shape[0]
+        return self._array.shape[0]
 
     def __str__(self):
         return f"{(len(self) / self.frame_rate):.1f} s," \
@@ -67,11 +67,11 @@ class AudioClip:
 
     @property
     def channels(self):
-        return self.array.shape[1]
+        return self._array.shape[1]
 
     @property
     def writeable(self):
-        return self.array.flags.writeable
+        return self._array.flags.writeable
 
     @writeable.setter
     def writeable(self, value):
@@ -84,28 +84,39 @@ class AudioClip:
         The default is True.
         :param value: Whether the underlying NumPy array is writeable.
         """
-        self.array.flags.writeable = value
+        self._array.flags.writeable = value
         if value:
             self._immutable_clip_data = None  # invalidate cached value
+
+    @property
+    def array(self):
+        """
+        Return the underlying NumPy array. Note: the array object may be changed
+        to a new one on certain operations, like resize.
+        WARNING: You must not change the contents of the array if
+        AudioClip.writeable is False! Set it to True first. This is because
+        AudioClip caches some properties of the data if it's not writeable.
+        """
+        return self._array
 
     def calculate_rms_power(self):
         """
         Calculates total signal power, over the whole signal duration.
         :return: Total signal power (dB)
         """
-        return factor_to_dB(np.sqrt(np.mean(self.array ** 2)))
+        return factor_to_dB(np.sqrt(np.mean(self._array ** 2)))
 
     def get_immutable_clip_data(self):
         if self._immutable_clip_data is not None:
             return self._immutable_clip_data
-        calculated = ((self.array * 32767)
+        calculated = ((self._array * 32767)
                       .clip(-32767, 32767).astype(np.int16).tobytes())
-        if not self.array.flags.writeable:
+        if not self._array.flags.writeable:
             self._immutable_clip_data = calculated  # cache the result
         return calculated
 
     def channel(self, channel_number):
-        return AudioClip(self.array[:,channel_number], self.frame_rate)
+        return AudioClip(self._array[:,channel_number], self.frame_rate)
 
     def overwrite(self, patch_clip, position, clip_a=0, clip_b=-1):
         """
@@ -130,8 +141,8 @@ class AudioClip:
             to_cut = position + inserted_length - len(self)
             inserted_length -= to_cut
             clip_b -= to_cut
-        self.array[position:position+inserted_length,:] = (
-            patch_clip.array[clip_a:clip_b,:])
+        self._array[position:position+inserted_length,:] = (
+            patch_clip._array[clip_a:clip_b,:])
 
     def resampled_if_needed(self,
                             required_frame_rate: float,
@@ -146,7 +157,7 @@ class AudioClip:
                                                * required_frame_rate
                                                / self.frame_rate)),
             np.linspace(0, length_seconds, len(self)),
-            self.array[:, i]) for i in range(self.channels)]))
+            self._array[:, i]) for i in range(self.channels)]))
             / 32768)
         return AudioClip(new_array, required_frame_rate)
 
@@ -158,18 +169,18 @@ class AudioClip:
         return AudioClip(arr, frame_rate)
 
     def to_soundfile(self, filename):
-        sf.write(filename, self.array, int(self.frame_rate))
+        sf.write(filename, self._array, int(self.frame_rate))
 
     def create_metering_data(self, metering_fps=24):
         metering_window = self.frame_rate / metering_fps
-        num_fragments = int(self.array.shape[0] // metering_window)
+        num_fragments = int(self._array.shape[0] // metering_window)
         if num_fragments > 1:
             x = np.linspace(0, len(self) / self.frame_rate, num_fragments)
             y = [factor_to_dB(np.sqrt(np.mean(fragment ** 2)))
-                 for fragment in np.array_split(self.array, num_fragments)]
+                 for fragment in np.array_split(self._array, num_fragments)]
         else:
             x = np.linspace(0, len(self) / self.frame_rate, 1)
-            y = [factor_to_dB(np.sqrt(np.mean(self.array ** 2)))]
+            y = [factor_to_dB(np.sqrt(np.mean(self._array ** 2)))]
         return x, y
 
     def open_in_audacity(self):
@@ -187,7 +198,7 @@ class AudioClip:
     def plot(self):
         plt.figure(figsize=(len(self) / self.frame_rate, 10))
         plt.gca().set_ylim([-1, 1])
-        plt.plot(self.array)
+        plt.plot(self._array)
         plt.show()
 
     @staticmethod
@@ -223,7 +234,7 @@ class AudioClip:
         if left.channels != 1 or right.channels != 1:
             raise ValueError("Both clips must be mono")
         return AudioClip(
-            np.hstack((left.array, right.array)), left.frame_rate)
+            np.hstack((left._array, right._array)), left.frame_rate)
 
     @staticmethod
     def concatenate(sequence_of_clips):
@@ -235,7 +246,7 @@ class AudioClip:
         if not all(clip.frame_rate == clips[0].frame_rate for clip in clips):
             raise ValueError("All clips must have the same sample rate")
         return AudioClip(
-            np.vstack([clip.array for clip in clips]),
+            np.vstack([clip._array for clip in clips]),
             clips[0].frame_rate)
 
 
