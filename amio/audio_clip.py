@@ -229,6 +229,14 @@ class AudioClip:
         return AudioClip(np.zeros((length, channels), np.float32), frame_rate)
 
     @staticmethod
+    def sine(frequency, amplitude, length, channels, frame_rate):
+        length_seconds = length / frame_rate
+        periods = length_seconds * frequency
+        sine = amplitude * np.sin(np.linspace(0, 2 * np.pi * periods, length))
+        sine = np.reshape(sine, (length, 1))
+        return AudioClip(np.hstack(channels * (sine, )), frame_rate)
+
+    @staticmethod
     def from_au_file(filename):
         with open(filename, 'rb') as file:
             data = file.read()

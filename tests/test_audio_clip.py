@@ -53,3 +53,19 @@ def test_resize_upwards():
     clip.resize(150)
     assert clip.channels == 2
     assert len(clip) == 150
+
+
+def test_sine_1():
+    # TODO Enhance this test by adding checks for sine properties
+    clip = AudioClip.sine(440, 1.0, 48000, 1, 48000)
+    assert clip.frame_rate == 48000
+    assert clip.channels == 1
+    assert len(clip) == 48000
+
+
+def test_sine_2():
+    # TODO Enhance this test by adding checks for sine properties
+    clip = AudioClip.sine(440, 1.0, 48000, 2, 48000)
+    assert clip.frame_rate == 48000
+    assert clip.channels == 2
+    assert len(clip) == 48000
