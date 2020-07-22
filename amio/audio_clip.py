@@ -135,6 +135,9 @@ class AudioClip:
         assert patch_clip.channels == self.channels
         if clip_b == -1:
             clip_b = len(patch_clip)
+        if position < 0:
+            clip_a += (-position)
+            position = 0
         inserted_length = clip_b - clip_a
         if inserted_length < 0:
             return
