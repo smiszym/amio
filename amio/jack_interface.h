@@ -22,6 +22,8 @@ struct JackInterface
     jack_port_t *output_port_l;
     jack_port_t *output_port_r;
 
+    int total_latency;
+
     bool is_transport_rolling;
     int frame_in_playspec;  /* position in the whole playspec */
 };

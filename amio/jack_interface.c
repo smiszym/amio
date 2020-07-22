@@ -49,7 +49,7 @@ static int process(jack_nframes_t nframes, void *arg)
         nframes,
         in_buffer_l,
         in_buffer_r,
-        amio_jack_client->frame_in_playspec,
+        amio_jack_client->frame_in_playspec - amio_jack_client->total_latency,
         amio_jack_client->is_transport_rolling);
 
     out_buffer_l = (jack_default_audio_sample_t*)jack_port_get_buffer(
@@ -182,6 +182,16 @@ struct JackInterface * jackio_init(const char *client_name)
         fprintf(stderr, "Cannot connect input ports\n");
     }
 
+    /*
+     * Calculating the total latency only for one channel and assuming
+     * the other channel has exactly the same latency.
+     */
+    jack_latency_range_t capture_latency;
+    jack_port_get_latency_range(
+        jack_port_by_name(jack_interface->client, ports[0]),
+        JackCaptureLatency,
+        &capture_latency);
+
     jack_free(ports);
 
     ports = jack_get_ports(jack_interface->client, NULL, NULL,
@@ -201,7 +211,20 @@ struct JackInterface * jackio_init(const char *client_name)
         fprintf(stderr, "Cannot connect output ports\n");
     }
 
+    /*
+     * Calculating the total latency only for one channel and assuming
+     * the other channel has exactly the same latency.
+     */
+    jack_latency_range_t playback_latency;
+    jack_port_get_latency_range(
+        jack_port_by_name(jack_interface->client, ports[0]),
+        JackPlaybackLatency,
+        &playback_latency);
+
     jack_free(ports);
+
+    /* We should handle situations where min!=max, but these are rare */
+    jack_interface->total_latency = capture_latency.min + playback_latency.min;
 
     return jack_interface;
 }
