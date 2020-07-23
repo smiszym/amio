@@ -99,6 +99,10 @@ class AudioClip:
         """
         return self._array
 
+    @property
+    def memory_usage_mb(self):
+        return self._array.nbytes / 1024 / 1024
+
     def calculate_rms_power(self):
         """
         Calculates total signal power, over the whole signal duration.
