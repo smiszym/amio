@@ -1,6 +1,7 @@
 from amio.audio_clip import ImmutableAudioClip, InputAudioChunk
 from amio.interface import Interface
 import amio.core
+from datetime import datetime
 import numpy as np
 import threading
 from time import sleep
@@ -118,4 +119,5 @@ class JackInterface(Interface):
             array = np.reshape(array, (array.shape[0] // 2, 2))
             frame_rate = self.get_frame_rate()
             return InputAudioChunk(
-                array, frame_rate, starting_frame, was_transport_rolling)
+                array, frame_rate, starting_frame, was_transport_rolling,
+                datetime.now())

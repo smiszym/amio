@@ -32,7 +32,7 @@ class NullInterface(Interface):
     def advance_single_chunk_length(self):
         chunk = InputAudioChunk(
             np.zeros((self.chunk_length, 2), np.float32), self._frame_rate,
-            self._position, self._is_transport_rolling)
+            self._position, self._is_transport_rolling, self._time)
         if self._is_transport_rolling:
             self._position += self.chunk_length
         self._time += timedelta(seconds=(self.chunk_length / self._frame_rate))

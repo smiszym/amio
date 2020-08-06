@@ -294,7 +294,10 @@ class AudioClip:
 
 class InputAudioChunk(AudioClip):
     def __init__(
-            self, array, frame_rate: float, starting_frame, was_transport_rolling):
+            self, array, frame_rate: float,
+            starting_frame, was_transport_rolling,
+            wall_time):
         super(InputAudioChunk, self).__init__(array, frame_rate)
         self.starting_frame = starting_frame
         self.was_transport_rolling = was_transport_rolling
+        self.wall_time = wall_time
