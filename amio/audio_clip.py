@@ -187,13 +187,11 @@ class AudioClip:
     def create_metering_data(self, metering_fps=24):
         metering_window = self.frame_rate / metering_fps
         num_fragments = int(self._array.shape[0] // metering_window)
-        if num_fragments > 1:
-            x = np.linspace(0, len(self) / self.frame_rate, num_fragments)
-            y = [factor_to_dB(np.sqrt(np.mean(fragment ** 2)))
-                 for fragment in np.array_split(self._array, num_fragments)]
-        else:
-            x = np.linspace(0, len(self) / self.frame_rate, 1)
-            y = [factor_to_dB(np.sqrt(np.mean(self._array ** 2)))]
+        if num_fragments < 1:
+            num_fragments = 1
+        x = np.linspace(0, len(self) / self.frame_rate, num_fragments)
+        y = [factor_to_dB(np.sqrt(np.mean(fragment ** 2)))
+             for fragment in np.array_split(self._array, num_fragments)]
         return x, y
 
     def resize(self, new_length):
