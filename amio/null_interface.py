@@ -1,5 +1,6 @@
 from amio.audio_clip import InputAudioChunk
 from amio.interface import Interface
+from datetime import datetime, timedelta
 import numpy as np
 
 
@@ -11,13 +12,14 @@ class NullInterface(Interface):
 
     chunk_length = 4800  # 0.1 s at 48 kHz
 
-    def __init__(self, frame_rate):
+    def __init__(self, frame_rate, starting_time=None):
         self._frame_rate = frame_rate
         self._position = 0
         self._is_transport_rolling = False
         self._playspec = None
         self._closed = False
         self._input_chunk_callback = None
+        self._time = starting_time or datetime.now()
 
     @property
     def input_chunk_callback(self):
@@ -33,7 +35,11 @@ class NullInterface(Interface):
             self._position, self._is_transport_rolling)
         if self._is_transport_rolling:
             self._position += self.chunk_length
+        self._time += timedelta(seconds=(self.chunk_length / self._frame_rate))
         self._input_chunk_callback(chunk)
+
+    def get_current_virtual_time(self):
+        return self._time
 
     def get_frame_rate(self):
         assert not self._closed
