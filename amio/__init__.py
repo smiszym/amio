@@ -6,6 +6,7 @@ from amio.playspec import Playspec
 import amio.core
 from amio.dummy_interface import DummyInterface
 from amio.jack_interface import JackInterface
+from amio.null_interface import NullInterface
 
 
 __version__ = "0.1"
@@ -14,6 +15,8 @@ __version__ = "0.1"
 def create_io_interface(driver='jack', **kwargs):
     if driver == 'dummy':
         return DummyInterface(**kwargs)
+    elif driver == 'null':
+        return NullInterface(**kwargs)
     elif driver == 'jack':
         return JackInterface()
     else:
