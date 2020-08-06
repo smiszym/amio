@@ -190,10 +190,13 @@ class AudioClip:
         if num_fragments < 1:
             num_fragments = 1
         fragments = np.array_split(self._array, num_fragments)
-        rms = [factor_to_dB(np.sqrt(np.mean(fragment ** 2)))
-               for fragment in fragments]
-        peak = [factor_to_dB(np.max(np.abs(fragment)))
-                for fragment in fragments]
+
+        def clamp(value):
+            return min(max(-127, value), 127)
+        rms = np.array([clamp(factor_to_dB(np.sqrt(np.mean(fragment ** 2))))
+                        for fragment in fragments], np.int8)
+        peak = np.array([clamp(factor_to_dB(np.max(np.abs(fragment))))
+                         for fragment in fragments], np.int8)
         return num_fragments, rms, peak
 
     def resize(self, new_length):
