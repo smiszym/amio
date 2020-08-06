@@ -189,9 +189,12 @@ class AudioClip:
         num_fragments = int(self._array.shape[0] // metering_window)
         if num_fragments < 1:
             num_fragments = 1
+        fragments = np.array_split(self._array, num_fragments)
         rms = [factor_to_dB(np.sqrt(np.mean(fragment ** 2)))
-               for fragment in np.array_split(self._array, num_fragments)]
-        return num_fragments, rms
+               for fragment in fragments]
+        peak = [factor_to_dB(np.max(np.abs(fragment)))
+                for fragment in fragments]
+        return num_fragments, rms, peak
 
     def resize(self, new_length):
         """
