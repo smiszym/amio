@@ -1,9 +1,8 @@
-# Public API
 from amio.audio_clip import AudioClip, InputAudioChunk
 from amio.fader import factor_to_dB, dB_to_factor, Fader
 from amio.playspec import Playspec
 
-import amio.core
+from amio.interface import Interface
 from amio.dummy_interface import DummyInterface
 from amio.jack_interface import JackInterface
 from amio.null_interface import NullInterface
