@@ -56,6 +56,9 @@ setup(
         "amio.jack_interface",
         "amio.playspec",
     ],
+    requires = [
+        "mypy",
+    ],
     install_requires = [
         "matplotlib",
         "numpy",

@@ -9,7 +9,7 @@ import sys
 #              10x |     100x     | +20 dB
 
 
-def factor_to_dB(factor):
+def factor_to_dB(factor: float) -> float:
     """
     Converts amplitude factor to power gain im decibels.
     :param factor: Amplitude factor between two signals
@@ -20,44 +20,44 @@ def factor_to_dB(factor):
             else float('-inf'))
 
 
-def dB_to_factor(dB):
+def dB_to_factor(dB: float) -> float:
     return 10 ** (dB / 20.0)
 
 
 class Fader:
-    def __init__(self, vol_dB=0.0, pan=0.0):
+    def __init__(self, vol_dB: float = 0.0, pan: float = 0.0):
         self._vol_factor = dB_to_factor(vol_dB)
         self._pan = pan
 
     @property
-    def vol_dB(self):
+    def vol_dB(self) -> float:
         return factor_to_dB(self._vol_factor)
 
     @vol_dB.setter
-    def vol_dB(self, value_dB):
+    def vol_dB(self, value_dB: float):
         self._vol_factor = dB_to_factor(value_dB)
 
     @property
-    def vol_factor(self):
+    def vol_factor(self) -> float:
         return self._vol_factor
 
     @vol_factor.setter
-    def vol_factor(self, value_factor):
+    def vol_factor(self, value_factor: float):
         self._vol_factor = value_factor
 
     @property
-    def pan(self):
+    def pan(self) -> float:
         return self._pan
 
     @pan.setter
-    def pan(self, value):
+    def pan(self, value: float):
         assert -1 <= value <= 1
         self._pan = value
 
     @property
-    def left_gain_factor(self):
+    def left_gain_factor(self) -> float:
         return self._vol_factor * (1.0 - self._pan)
 
     @property
-    def right_gain_factor(self):
+    def right_gain_factor(self) -> float:
         return self._vol_factor * (1.0 + self._pan)

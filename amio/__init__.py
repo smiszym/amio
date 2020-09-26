@@ -11,7 +11,7 @@ from amio.null_interface import NullInterface
 __version__ = "0.1"
 
 
-def create_io_interface(driver='jack', **kwargs):
+def create_io_interface(driver: str = 'jack', **kwargs) -> Interface:
     if driver == 'dummy':
         return DummyInterface(**kwargs)
     elif driver == 'null':

@@ -1,10 +1,12 @@
-from amio.audio_clip import ImmutableAudioClip, InputAudioChunk
-from amio.interface import Interface
+from amio.audio_clip import ImmutableAudioClip, InputAudioChunk, AudioClip
 import amio.core
+from amio.interface import Interface, InputChunkCallback
+from amio.playspec import Playspec
 from datetime import datetime
 import numpy as np
 import threading
 from time import sleep
+from typing import Optional
 
 
 class JackInterface(Interface):
@@ -17,25 +19,25 @@ class JackInterface(Interface):
         self._pending_logs = ""
 
     @property
-    def input_chunk_callback(self):
+    def input_chunk_callback(self) -> InputChunkCallback:
         return self._input_chunk_callback
 
     @input_chunk_callback.setter
-    def input_chunk_callback(self, callback):
+    def input_chunk_callback(self, callback: InputChunkCallback):
         self._input_chunk_callback = callback
 
-    def _notify_input_chunk(self, data):
+    def _notify_input_chunk(self, data: InputAudioChunk) -> None:
         if self._input_chunk_callback is not None:
             self._input_chunk_callback(data)
 
-    def init(self, client_name):
+    def init(self, client_name: str) -> None:
         self.jack_interface = amio.core.jackio_init(client_name)
         self.message_thread = threading.Thread(
             target=self._process_messages_and_print_logs,
             name='Python message thread')
         self.message_thread.start()
 
-    def _process_messages_and_print_logs(self):
+    def _process_messages_and_print_logs(self) -> None:
         should_stop = False
         while not should_stop:
             amio.core.jackio_process_messages_on_python_queue(
@@ -51,7 +53,7 @@ class JackInterface(Interface):
             with self.should_stop_lock:
                 should_stop = self.should_stop
 
-    def _collect_and_print_logs(self):
+    def _collect_and_print_logs(self) -> None:
         # Get any new logs from the IO thread.
         arr = bytearray(4096)
         amio.core.jackio_get_logs(self.jack_interface, arr)
@@ -65,59 +67,60 @@ class JackInterface(Interface):
         for line in lines[:-1]:
             print(line)
 
-    def get_frame_rate(self):
+    def get_frame_rate(self) -> float:
         return amio.core.jackio_get_frame_rate(self.jack_interface)
 
-    def get_position(self):
+    def get_position(self) -> int:
         return amio.core.jackio_get_position(self.jack_interface)
 
-    def set_position(self, position):
+    def set_position(self, position: int) -> None:
         amio.core.jackio_set_position(self.jack_interface, position)
 
-    def is_transport_rolling(self):
+    def is_transport_rolling(self) -> bool:
         return amio.core.jackio_get_transport_rolling(self.jack_interface) != 0
 
-    def set_transport_rolling(self, rolling):
+    def set_transport_rolling(self, rolling: bool) -> None:
         amio.core.jackio_set_transport_rolling(
             self.jack_interface,
             1 if rolling else 0)
 
-    def generate_immutable_clip(self, audio_clip):
+    def generate_immutable_clip(self,
+                                audio_clip: AudioClip) -> ImmutableAudioClip:
         return ImmutableAudioClip(
             self,
             audio_clip.get_immutable_clip_data(),
             audio_clip.channels,
             audio_clip.frame_rate)
 
-    def set_current_playspec(self, playspec):
+    def set_current_playspec(self, playspec: Playspec) -> None:
         amio.core.jackio_set_playspec(
             self.jack_interface, playspec._immutable_playspec.playspec)
 
-    def close(self):
+    def close(self) -> None:
         with self.should_stop_lock:
             self.should_stop = True
         self.message_thread.join()
         amio.core.jackio_close(self.jack_interface)
         self.jack_interface = None
 
-    def is_closed(self):
+    def is_closed(self) -> bool:
         return self.jack_interface is None
 
-    def _get_next_input_chunk(self):
+    def _get_next_input_chunk(self) -> Optional[InputAudioChunk]:
         input_chunk = amio.core.jackio_get_input_chunk(self.jack_interface)
-        if input_chunk is not None:
-            buf = bytearray(128 * 4)  # 128 float samples
-            if amio.core.InputChunk_get_samples(input_chunk, buf) == 0:
-                # TODO This shouldn't happen! Raise an error here somehow
-                return
-            starting_frame = amio.core.InputChunk_get_starting_frame(
-                input_chunk)
-            was_transport_rolling = (amio.core
-                .InputChunk_get_was_transport_rolling(input_chunk) != 0)
-            amio.core.InputChunk_del(input_chunk)
-            array = np.frombuffer(buf, dtype=np.float32)
-            array = np.reshape(array, (array.shape[0] // 2, 2))
-            frame_rate = self.get_frame_rate()
-            return InputAudioChunk(
-                array, frame_rate, starting_frame, was_transport_rolling,
-                datetime.now())
+        if input_chunk is None:
+            return None
+        buf = bytearray(128 * 4)  # 128 float samples
+        if amio.core.InputChunk_get_samples(input_chunk, buf) == 0:
+            raise AssertionError("AMIO bug: invalid buffer length")
+        starting_frame = amio.core.InputChunk_get_starting_frame(
+            input_chunk)
+        was_transport_rolling = (amio.core
+            .InputChunk_get_was_transport_rolling(input_chunk) != 0)
+        amio.core.InputChunk_del(input_chunk)
+        array = np.frombuffer(buf, dtype=np.float32)
+        array = np.reshape(array, (array.shape[0] // 2, 2))
+        frame_rate = self.get_frame_rate()
+        return InputAudioChunk(
+            array, frame_rate, starting_frame, was_transport_rolling,
+            datetime.now())
