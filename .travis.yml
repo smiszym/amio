@@ -5,7 +5,6 @@ python:
   - "3.8-dev"
 before_install:
   - sudo apt-get -y install libjack-jackd2-dev swig
-  - ./build.sh
 install:
   - pip install -e .
   - pip install mypy

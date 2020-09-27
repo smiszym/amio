@@ -24,7 +24,7 @@ def get_version(rel_path):
 core_module = Extension(
     'amio/_core',
     sources=[
-        'amio/core_wrap.c',
+        'amio/core.i',
         'amio/audio_clip.c',
         'amio/communication.c',
         'amio/input_chunk.c',
