@@ -22,7 +22,7 @@ def get_version(rel_path):
 
 
 core_module = Extension(
-    'amio/_core',
+    'amio._core',
     sources=[
         'amio/core.i',
         'amio/audio_clip.c',
@@ -46,16 +46,7 @@ setup(
     license="MIT",
     url="https://github.com/smiszym/amio",
     ext_modules = [core_module],
-    py_modules = [
-        "amio",
-        "amio.core",
-        "amio.audio_clip",
-        "amio.dummy_interface",
-        "amio.fader",
-        "amio.interface",
-        "amio.jack_interface",
-        "amio.playspec",
-    ],
+    packages = [ "amio" ],
     requires = [
         "mypy",
     ],
