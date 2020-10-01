@@ -1,5 +1,5 @@
 from amio.audio_clip import ImmutableAudioClip, AudioClip
-import amio.core
+import amio._core
 from typing import List, Optional
 
 
@@ -7,12 +7,12 @@ class ImmutablePlayspec:
     def __init__(self, jack_interface: 'amio.jack_interface.JackInterface',
                  size: int):
         self._jack_interface = jack_interface
-        self.playspec = amio.core.Playspec_init(size)
+        self.playspec = amio._core.Playspec_init(size)
         self._entries: List[Optional[ImmutableAudioClip]] = [
             None for i in range(size)]
 
     def __del__(self):
-        amio.core.Playspec_del(
+        amio._core.Playspec_del(
             self._jack_interface.jack_interface,
             self.playspec)
 
@@ -23,7 +23,7 @@ class ImmutablePlayspec:
         # Storing in the list to keep this ImmutableAudioClip alive
         if isinstance(clip, ImmutableAudioClip):
             self._entries[n] = clip
-            amio.core.Playspec_setEntry(
+            amio._core.Playspec_setEntry(
                 self.playspec, n, clip.io_owned_clip,
                 frame_a, frame_b,
                 play_at_frame, repeat_interval,
@@ -32,7 +32,7 @@ class ImmutablePlayspec:
             immutable_clip = (self._jack_interface
                                 .generate_immutable_clip(clip))
             self._entries[n] = immutable_clip
-            amio.core.Playspec_setEntry(
+            amio._core.Playspec_setEntry(
                 self.playspec, n, immutable_clip.io_owned_clip,
                 frame_a, frame_b,
                 play_at_frame, repeat_interval,
@@ -41,10 +41,10 @@ class ImmutablePlayspec:
             raise ValueError("Wrong audio clip type")
 
     def set_length(self, length: int) -> None:
-        amio.core.Playspec_setLength(self.playspec, length)
+        amio._core.Playspec_setLength(self.playspec, length)
 
     def set_insertion_points(self, insert_at: int, start_from: int) -> None:
-        amio.core.Playspec_setInsertionPoints(
+        amio._core.Playspec_setInsertionPoints(
             self.playspec, insert_at, start_from)
 
 

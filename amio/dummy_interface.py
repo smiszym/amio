@@ -3,7 +3,7 @@ from amio.interface import Interface
 
 class DummyInterface(Interface):
     """
-    Dummy interface that doesn't interact with amio.core at all, thus
+    Dummy interface that doesn't interact with amio._core at all, thus
     requiring no native code. It doesn't have any functionality, but it's
     capable of frame-to-second conversion, so is suitable for use in tests.
     """

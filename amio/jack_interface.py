@@ -1,5 +1,5 @@
 from amio.audio_clip import ImmutableAudioClip, InputAudioChunk, AudioClip
-import amio.core
+import amio._core
 from amio.interface import Interface, InputChunkCallback
 from amio.playspec import Playspec
 from datetime import datetime
@@ -31,7 +31,7 @@ class JackInterface(Interface):
             self._input_chunk_callback(data)
 
     def init(self, client_name: str) -> None:
-        self.jack_interface = amio.core.jackio_init(client_name)
+        self.jack_interface = amio._core.jackio_init(client_name)
         self.message_thread = threading.Thread(
             target=self._process_messages_and_print_logs,
             name='Python message thread')
@@ -40,7 +40,7 @@ class JackInterface(Interface):
     def _process_messages_and_print_logs(self) -> None:
         should_stop = False
         while not should_stop:
-            amio.core.jackio_process_messages_on_python_queue(
+            amio._core.jackio_process_messages_on_python_queue(
                 self.jack_interface)
             self._collect_and_print_logs()
             while True:
@@ -56,7 +56,7 @@ class JackInterface(Interface):
     def _collect_and_print_logs(self) -> None:
         # Get any new logs from the IO thread.
         arr = bytearray(4096)
-        amio.core.jackio_get_logs(self.jack_interface, arr)
+        amio._core.jackio_get_logs(self.jack_interface, arr)
         log_content, _, _ = arr.partition(b'\x00')
         self._pending_logs += log_content.decode("utf-8")
 
@@ -68,19 +68,19 @@ class JackInterface(Interface):
             print(line)
 
     def get_frame_rate(self) -> float:
-        return amio.core.jackio_get_frame_rate(self.jack_interface)
+        return amio._core.jackio_get_frame_rate(self.jack_interface)
 
     def get_position(self) -> int:
-        return amio.core.jackio_get_position(self.jack_interface)
+        return amio._core.jackio_get_position(self.jack_interface)
 
     def set_position(self, position: int) -> None:
-        amio.core.jackio_set_position(self.jack_interface, position)
+        amio._core.jackio_set_position(self.jack_interface, position)
 
     def is_transport_rolling(self) -> bool:
-        return amio.core.jackio_get_transport_rolling(self.jack_interface) != 0
+        return amio._core.jackio_get_transport_rolling(self.jack_interface) != 0
 
     def set_transport_rolling(self, rolling: bool) -> None:
-        amio.core.jackio_set_transport_rolling(
+        amio._core.jackio_set_transport_rolling(
             self.jack_interface,
             1 if rolling else 0)
 
@@ -93,31 +93,31 @@ class JackInterface(Interface):
             audio_clip.frame_rate)
 
     def set_current_playspec(self, playspec: Playspec) -> None:
-        amio.core.jackio_set_playspec(
+        amio._core.jackio_set_playspec(
             self.jack_interface, playspec._immutable_playspec.playspec)
 
     def close(self) -> None:
         with self.should_stop_lock:
             self.should_stop = True
         self.message_thread.join()
-        amio.core.jackio_close(self.jack_interface)
+        amio._core.jackio_close(self.jack_interface)
         self.jack_interface = None
 
     def is_closed(self) -> bool:
         return self.jack_interface is None
 
     def _get_next_input_chunk(self) -> Optional[InputAudioChunk]:
-        input_chunk = amio.core.jackio_get_input_chunk(self.jack_interface)
+        input_chunk = amio._core.jackio_get_input_chunk(self.jack_interface)
         if input_chunk is None:
             return None
         buf = bytearray(128 * 4)  # 128 float samples
-        if amio.core.InputChunk_get_samples(input_chunk, buf) == 0:
+        if amio._core.InputChunk_get_samples(input_chunk, buf) == 0:
             raise AssertionError("AMIO bug: invalid buffer length")
-        starting_frame = amio.core.InputChunk_get_starting_frame(
+        starting_frame = amio._core.InputChunk_get_starting_frame(
             input_chunk)
-        was_transport_rolling = (amio.core
+        was_transport_rolling = (amio._core
             .InputChunk_get_was_transport_rolling(input_chunk) != 0)
-        amio.core.InputChunk_del(input_chunk)
+        amio._core.InputChunk_del(input_chunk)
         array = np.frombuffer(buf, dtype=np.float32)
         array = np.reshape(array, (array.shape[0] // 2, 2))
         frame_rate = self.get_frame_rate()
