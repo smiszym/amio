@@ -86,11 +86,13 @@ class JackInterface(Interface):
 
     def generate_immutable_clip(self,
                                 audio_clip: AudioClip) -> ImmutableAudioClip:
+        interface_frame_rate = self.get_frame_rate()
+        assert audio_clip.frame_rate == interface_frame_rate
         return ImmutableAudioClip(
             self,
             audio_clip.get_immutable_clip_data(),
             audio_clip.channels,
-            audio_clip.frame_rate)
+            interface_frame_rate)
 
     def set_current_playspec(self, playspec: Playspec) -> None:
         amio._core.jackio_set_playspec(
