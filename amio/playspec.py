@@ -1,24 +1,37 @@
-from amio.audio_clip import ImmutableAudioClip, AudioClip
+from amio.audio_clip import ImmutableAudioClip
 import amio._core
 from collections import namedtuple
-from typing import List, Optional
+from typing import List
 
 
 class PlayspecEntry(namedtuple(
         'PlayspecEntry',
         'clip frame_a frame_b play_at_frame repeat_interval gain_l gain_r')):
-    pass
+    @property
+    def start(self):
+        return self.play_at_frame
+
+    @start.setter
+    def start(self, new_start):
+        shorten_by = new_start - self.start
+        self.play_at_frame += shorten_by
+        self.frame_a += shorten_by
+        if self.frame_a > self.frame_b:
+            self.frame_a = self.frame_b
+
+    @property
+    def end(self):
+        return self.play_at_frame + len(self)
+
+    @end.setter
+    def end(self, new_end):
+        shorten_by = self.end - new_end
+        self.frame_b -= shorten_by
+        if self.frame_b < self.frame_a:
+            self.frame_b = self.frame_a
+
+    def __len__(self):
+        return self.frame_b - self.frame_a
 
 
-class Playspec:
-    def __init__(self, jack_interface: 'amio.jack_interface.JackInterface',
-                 size: int):
-        self.jack_interface = jack_interface
-        self.entries: List[Optional[PlayspecEntry]] = [None] * size
-
-    def set_entry(self, n: int, clip: AudioClip,
-                  frame_a: int, frame_b: int,
-                  play_at_frame: int, repeat_interval: int,
-                  gain_l: float, gain_r: float) -> None:
-        self.entries[n] = PlayspecEntry(clip, frame_a, frame_b, play_at_frame,
-                                        repeat_interval, gain_l, gain_r)
+Playspec = List[PlayspecEntry]

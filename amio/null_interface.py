@@ -3,7 +3,6 @@ from amio.interface import Interface, InputChunkCallback
 from amio.playspec import Playspec
 from datetime import datetime, timedelta
 import numpy as np
-from typing import Optional
 
 
 class NullInterface(Interface):
@@ -19,7 +18,7 @@ class NullInterface(Interface):
         self._frame_rate = frame_rate
         self._position = 0
         self._is_transport_rolling = False
-        self._playspec: Optional[Playspec] = None
+        self._playspec: Playspec = []
         self._closed = False
         self._time = starting_time or datetime.now()
 

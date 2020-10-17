@@ -102,12 +102,11 @@ class JackInterface(Interface):
 
     def set_current_playspec(self,
             playspec: Playspec, insert_at: int, start_from: int) -> None:
-        size = len(playspec.entries)
         amio._core.begin_defining_playspec(
-            size, insert_at, start_from)
-        self._keepalive_clips = [None for i in range(size)]
-        for n, entry in enumerate(playspec.entries):
-            entry = playspec.entries[n]
+            len(playspec), insert_at, start_from)
+        self._keepalive_clips: List[Optional[ImmutableAudioClip]] = [
+            None for _ in range(len(playspec))]
+        for n, entry in enumerate(playspec):
             # Storing in the list to keep this ImmutableAudioClip alive
             if isinstance(entry.clip, ImmutableAudioClip):
                 self._keepalive_clips[n] = entry.clip
@@ -115,15 +114,14 @@ class JackInterface(Interface):
                     n, entry.frame_a, entry.frame_b, entry.play_at_frame,
                     entry.repeat_interval, entry.gain_l, entry.gain_r)
             elif isinstance(entry.clip, AudioClip):
-                immutable_clip = (playspec.jack_interface
-                                  .generate_immutable_clip(entry.clip))
+                immutable_clip = (self.generate_immutable_clip(entry.clip))
                 self._keepalive_clips[n] = immutable_clip
                 immutable_clip.use_as_playspec_entry(
                     n, entry.frame_a, entry.frame_b, entry.play_at_frame,
                     entry.repeat_interval, entry.gain_l, entry.gain_r)
             else:
                 raise ValueError("Wrong audio clip type")
-        amio._core.jack_iface_set_playspec(playspec.jack_interface.jack_interface)
+        amio._core.jack_iface_set_playspec(self.jack_interface)
 
     def close(self) -> None:
         with self.should_stop_lock:

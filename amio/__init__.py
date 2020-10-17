@@ -1,6 +1,6 @@
 from amio.audio_clip import AudioClip, InputAudioChunk
 from amio.fader import factor_to_dB, dB_to_factor, Fader
-from amio.playspec import Playspec
+from amio.playspec import Playspec, PlayspecEntry
 
 from amio.interface import Interface
 from amio.dummy_interface import DummyInterface
