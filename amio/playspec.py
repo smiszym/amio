@@ -25,14 +25,14 @@ class ImmutablePlayspec:
 
     @classmethod
     def from_playspec(cls, playspec: 'Playspec') -> 'ImmutablePlayspec':
-        result = cls(playspec._jack_interface, len(playspec._entries))
-        for n, entry in enumerate(playspec._entries):
-            entry = playspec._entries[n]
+        result = cls(playspec.jack_interface, len(playspec.entries))
+        for n, entry in enumerate(playspec.entries):
+            entry = playspec.entries[n]
             result.set_entry(
                 n, entry.clip, entry.frame_a, entry.frame_b,
                 entry.play_at_frame, entry.repeat_interval,
                 entry.gain_l, entry.gain_r)
-        result.set_insertion_points(playspec._insert_at, playspec._start_from)
+        result.set_insertion_points(playspec.insert_at, playspec.start_from)
         return result
 
     def set_entry(self, n: int, clip: AudioClip,
@@ -67,18 +67,18 @@ class ImmutablePlayspec:
 class Playspec:
     def __init__(self, jack_interface: 'amio.jack_interface.JackInterface',
                  size: int):
-        self._jack_interface = jack_interface
-        self._insert_at = 0
-        self._start_from = 0
-        self._entries: List[Optional[PlayspecEntry]] = [None] * size
+        self.jack_interface = jack_interface
+        self.insert_at = 0
+        self.start_from = 0
+        self.entries: List[Optional[PlayspecEntry]] = [None] * size
 
     def set_entry(self, n: int, clip: AudioClip,
                   frame_a: int, frame_b: int,
                   play_at_frame: int, repeat_interval: int,
                   gain_l: float, gain_r: float) -> None:
-        self._entries[n] = PlayspecEntry(clip, frame_a, frame_b, play_at_frame,
-                                         repeat_interval, gain_l, gain_r)
+        self.entries[n] = PlayspecEntry(clip, frame_a, frame_b, play_at_frame,
+                                        repeat_interval, gain_l, gain_r)
 
     def set_insertion_points(self, insert_at: int, start_from: int) -> None:
-        self._insert_at = insert_at
-        self._start_from = start_from
+        self.insert_at = insert_at
+        self.start_from = start_from
