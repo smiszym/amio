@@ -41,9 +41,6 @@ struct Playspec
     int num_entries;
     struct PlayspecEntry *entries;
 
-    /* Playspec length in frames. The playspec is looped. */
-    int length;
-
     /*
      * Time in frames, counted from the beginning of the previous
      * playspec, at which to insert this playspec. Only read by the JACK
@@ -81,7 +78,6 @@ void Playspec_setEntry(struct Playspec *playspec, int n,
     int clip_frame_a, int clip_frame_b,
     int play_at_frame, int repeat_interval,
     float gain_l, float gain_r);
-void Playspec_setLength(struct Playspec *playspec, int length);
 void Playspec_setInsertionPoints(
     struct Playspec *playspec, int insert_at, int start_from);
 

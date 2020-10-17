@@ -13,7 +13,6 @@ struct Playspec * Playspec_init(int size)
     result->num_entries = size;
     result->entries = malloc(
         size * sizeof(struct PlayspecEntry));
-    result->length = 0;
 
     for (int i = 0; i < size; ++i) {
         result->entries[i].audio_clip = NULL;
@@ -63,19 +62,6 @@ void Playspec_setEntry(struct Playspec *playspec, int n,
     playspec->entries[n].repeat_interval = repeat_interval;
     playspec->entries[n].gain_l = gain_l;
     playspec->entries[n].gain_r = gain_r;
-}
-
-void Playspec_setLength(struct Playspec *playspec, int length)
-{
-    /* Runs on the Python thread */
-
-    /*
-     * Calling this is illegal after a reference to this playspec
-     * was passed to the Python thread (e.g., in MSG_SET_PLAYSPEC
-     * message).
-     */
-
-    playspec->length = length;
 }
 
 void Playspec_setInsertionPoints(

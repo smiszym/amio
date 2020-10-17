@@ -343,8 +343,7 @@ jack_nframes_t process_input_output_with_buffers(
 
     if (!is_transport_rolling
             || !state->current_playspec
-            || state->current_playspec->num_entries == 0
-            || state->current_playspec->length <= 0) {
+            || state->current_playspec->num_entries == 0) {
         frame_in_playspec = apply_pending_playspec_if_needed(state, frame_in_playspec);
         process_messages_on_jack_queue(state, driver, driver_handle);
         return frame_in_playspec;
@@ -369,13 +368,6 @@ jack_nframes_t process_input_output_with_buffers(
             }
         }
 
-        /*
-         * Check if we'll hit the loop boundary (end of playspec).
-         * If yes, limit the number of frames to copy.
-         */
-        if (state->current_playspec->length - frame_in_playspec < frames_to_copy)
-            frames_to_copy = state->current_playspec->length - frame_in_playspec;
-
         mix_playspec_into_jack_ports(
             state,
             port_l + frames_copied,
@@ -386,9 +378,6 @@ jack_nframes_t process_input_output_with_buffers(
         frame_in_playspec += frames_to_copy;
 
         frame_in_playspec = apply_pending_playspec_if_needed(state, frame_in_playspec);
-
-        if (frame_in_playspec == state->current_playspec->length)
-            frame_in_playspec = 0;
     }
     clamp_jack_port(port_l, port_r, nframes);
 

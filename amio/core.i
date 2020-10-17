@@ -35,7 +35,6 @@ void Playspec_setEntry(struct Playspec *playspec, int n,
     int clip_frame_a, int clip_frame_b,
     int play_at_frame, int repeat_interval,
     float gain_l, float gain_r);
-void Playspec_setLength(struct Playspec *playspec, int length);
 void Playspec_setInsertionPoints(
     struct Playspec *playspec, int insert_at, int start_from);
 
@@ -79,7 +78,6 @@ void Playspec_setEntry(struct Playspec *playspec, int n,
     int clip_frame_a, int clip_frame_b,
     int play_at_frame, int repeat_interval,
     float gain_l, float gain_r);
-void Playspec_setLength(struct Playspec *playspec, int length);
 void Playspec_setInsertionPoints(
     struct Playspec *playspec, int insert_at, int start_from);
 

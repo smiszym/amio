@@ -32,7 +32,6 @@ class ImmutablePlayspec:
                 n, entry.clip, entry.frame_a, entry.frame_b,
                 entry.play_at_frame, entry.repeat_interval,
                 entry.gain_l, entry.gain_r)
-        result.set_length(playspec._length)
         result.set_insertion_points(playspec._insert_at, playspec._start_from)
         return result
 
@@ -60,9 +59,6 @@ class ImmutablePlayspec:
         else:
             raise ValueError("Wrong audio clip type")
 
-    def set_length(self, length: int) -> None:
-        amio._core.Playspec_setLength(self.playspec, length)
-
     def set_insertion_points(self, insert_at: int, start_from: int) -> None:
         amio._core.Playspec_setInsertionPoints(
             self.playspec, insert_at, start_from)
@@ -72,7 +68,6 @@ class Playspec:
     def __init__(self, jack_interface: 'amio.jack_interface.JackInterface',
                  size: int):
         self._jack_interface = jack_interface
-        self._length = 0
         self._insert_at = 0
         self._start_from = 0
         self._entries: List[Optional[PlayspecEntry]] = [None] * size
@@ -83,9 +78,6 @@ class Playspec:
                   gain_l: float, gain_r: float) -> None:
         self._entries[n] = PlayspecEntry(clip, frame_a, frame_b, play_at_frame,
                                          repeat_interval, gain_l, gain_r)
-
-    def set_length(self, length: int) -> None:
-        self._length = length
 
     def set_insertion_points(self, insert_at: int, start_from: int) -> None:
         self._insert_at = insert_at
