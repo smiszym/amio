@@ -1,7 +1,7 @@
 from amio.audio_clip import ImmutableAudioClip, InputAudioChunk, AudioClip
 import amio._core
 from amio.interface import Interface, InputChunkCallback
-from amio.playspec import Playspec
+from amio.playspec import ImmutablePlayspec, Playspec
 from datetime import datetime
 import numpy as np
 import threading
@@ -15,6 +15,7 @@ class JackInterface(Interface):
         self.message_thread = None
         self.should_stop = False
         self.should_stop_lock = threading.Lock()
+        self._current_immutable_playspec = None
         self._input_chunk_callback = None
         self._pending_logs = ""
 
@@ -95,8 +96,10 @@ class JackInterface(Interface):
             interface_frame_rate)
 
     def set_current_playspec(self, playspec: Playspec) -> None:
+        self._current_immutable_playspec = (
+            ImmutablePlayspec.from_playspec(playspec))
         amio._core.jackio_set_playspec(
-            self.jack_interface, playspec._immutable_playspec.playspec)
+            self.jack_interface, self._current_immutable_playspec.playspec)
 
     def close(self) -> None:
         with self.should_stop_lock:
