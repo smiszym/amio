@@ -6,33 +6,33 @@
 #include "string.h"
 
 bool send_message_with_ptr_to_py_thread(
-        struct Interface *interface, int type, void *arg_ptr) {
+        struct Interface *interface, PyThreadCallable callable, void *arg_ptr) {
     struct Message msg;
-    msg.type = type;
+    msg.callable.py_thread_callable = callable;
     msg.arg.pointer = arg_ptr;
     return PaUtil_WriteRingBuffer(&interface->python_thread_queue, &msg, 1) > 0;
 }
 
 bool send_message_with_ptr_to_io_thread(
-        struct Interface *interface, int type, void *arg_ptr) {
+        struct Interface *interface, IoThreadCallable callable, void *arg_ptr) {
     struct Message msg;
-    msg.type = type;
+    msg.callable.io_thread_callable = callable;
     msg.arg.pointer = arg_ptr;
     return PaUtil_WriteRingBuffer(&interface->io_thread_queue, &msg, 1) > 0;
 }
 
 bool send_message_with_int_to_py_thread(
-        struct Interface *interface, int type, int arg_int) {
+        struct Interface *interface, PyThreadCallable callable, int arg_int) {
     struct Message msg;
-    msg.type = type;
+    msg.callable.py_thread_callable = callable;
     msg.arg.integer = arg_int;
     return PaUtil_WriteRingBuffer(&interface->python_thread_queue, &msg, 1) > 0;
 }
 
 bool send_message_with_int_to_io_thread(
-        struct Interface *interface, int type, int arg_int) {
+        struct Interface *interface, IoThreadCallable callable, int arg_int) {
     struct Message msg;
-    msg.type = type;
+    msg.callable.io_thread_callable = callable;
     msg.arg.integer = arg_int;
     return PaUtil_WriteRingBuffer(&interface->io_thread_queue, &msg, 1) > 0;
 }

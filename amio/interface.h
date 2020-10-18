@@ -54,6 +54,25 @@ void io_init(struct Interface *interface);
 
 void io_close(struct Interface *interface);
 
+void io_thread_unref_audio_clip(
+    struct Interface *state, struct DriverInterface *driver,
+    void *driver_handle, union TaskArgument arg);
+
+void py_thread_destroy_audio_clip(
+    struct Interface *interface, union TaskArgument arg);
+
+void py_thread_destroy_playspec(
+    struct Interface *interface, union TaskArgument arg);
+
+void py_thread_receive_frame_rate(
+    struct Interface *interface, union TaskArgument arg);
+
+void py_thread_receive_current_pos(
+    struct Interface *interface, union TaskArgument arg);
+
+void py_thread_receive_transport_state(
+    struct Interface *interface, union TaskArgument arg);
+
 void io_process_messages_on_python_queue(struct Interface *interface);
 
 void process_input_with_buffers(

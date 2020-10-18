@@ -5,6 +5,7 @@
 #include <stdint.h>
 #include <stdio.h>
 
+#include "driver.h"
 #include "input_chunk.h"
 #include "pa_ringbuffer.h"
 
@@ -16,23 +17,27 @@ union TaskArgument
     int integer;
 };
 
-struct Message
+typedef void (*IoThreadCallable)(
+    struct Interface *state,
+    struct DriverInterface *driver,
+    void *driver_handle,
+    union TaskArgument arg);
+
+typedef void (*PyThreadCallable)(
+    struct Interface *interface,
+    union TaskArgument arg);
+
+union TaskCallable
 {
-    int type;
-    union TaskArgument arg;
+    PyThreadCallable py_thread_callable;
+    IoThreadCallable io_thread_callable;
 };
 
-/* Python thread -> I/O thread */
-#define MSG_SET_PLAYSPEC        1  /* arg_ptr is the pointer to Playspec */
-#define MSG_UNREF_AUDIO_CLIP   2  /* arg_ptr is the pointer to AudioClip */
-#define MSG_SET_POS             3  /* arg_int is the position in frames */
-#define MSG_SET_TRANSPORT_STATE 4  /* arg_int is 1 for play, 0 for pause */
-/* I/O thread -> Python thread */
-#define MSG_DESTROY_AUDIO_CLIP 5  /* arg_ptr is the pointer to AudioClip */
-#define MSG_DESTROY_PLAYSPEC    6  /* arg_ptr is the pointer to Playspec */
-#define MSG_FRAME_RATE          7  /* arg_int is the frame rate */
-#define MSG_CURRENT_POS         8  /* arg_int is the current position in frames */
-#define MSG_TRANSPORT_STATE     9  /* arg_int is 1 if rolling, 0 is paused */
+struct Message
+{
+    union TaskCallable callable;
+    union TaskArgument arg;
+};
 
 /* Ring buffer implementation requires these to be powers of two! */
 #define THREAD_QUEUE_SIZE 2048
@@ -40,13 +45,13 @@ struct Message
 #define INPUT_CLIP_QUEUE_SIZE 2048
 
 bool send_message_with_ptr_to_py_thread(
-    struct Interface *interface, int type, void *arg_ptr);
+    struct Interface *interface, PyThreadCallable callable, void *arg_ptr);
 bool send_message_with_ptr_to_io_thread(
-    struct Interface *interface, int type, void *arg_ptr);
+    struct Interface *interface, IoThreadCallable callable, void *arg_ptr);
 bool send_message_with_int_to_py_thread(
-    struct Interface *interface, int type, int arg_int);
+    struct Interface *interface, PyThreadCallable callable, int arg_int);
 bool send_message_with_int_to_io_thread(
-    struct Interface *interface, int type, int arg_int);
+    struct Interface *interface, IoThreadCallable callable, int arg_int);
 bool write_log(struct Interface *state, char *s);
 void io_get_logs(struct Interface *interface, char *bytearray, int n);
 

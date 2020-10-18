@@ -86,7 +86,7 @@ static int apply_pending_playspec_if_needed(
     /* Destroy the old playspec if needed */
     if (old_playspec && !old_playspec->referenced_by_python) {
         if (!send_message_with_ptr_to_py_thread(
-            state, MSG_DESTROY_PLAYSPEC, old_playspec)) {
+            state, py_thread_destroy_playspec, old_playspec)) {
             // TODO handle failure
         }
     }
@@ -122,7 +122,7 @@ static int apply_pending_playspec_if_needed(
                     !clip->referenced_by_current_playspec &&
                     !clip->referenced_by_python) {
                 if (!send_message_with_ptr_to_py_thread(
-                    state, MSG_DESTROY_AUDIO_CLIP, clip)) {
+                    state, py_thread_destroy_audio_clip, clip)) {
                     // TODO handle failure
                 }
             }
@@ -140,7 +140,7 @@ static void io_thread_set_playspec(
     state->pending_playspec = arg.pointer;
 }
 
-static void io_thread_unref_audio_clip(
+void io_thread_unref_audio_clip(
     struct Interface *state, struct DriverInterface *driver,
     void *driver_handle, union TaskArgument arg)
 {
@@ -149,7 +149,7 @@ static void io_thread_unref_audio_clip(
     clip->referenced_by_python = false;
     if (!clip->referenced_by_current_playspec) {
         if (!send_message_with_ptr_to_py_thread(
-                state, MSG_DESTROY_AUDIO_CLIP, clip)) {
+                state, py_thread_destroy_audio_clip, clip)) {
             // TODO handle failure
         }
     }
@@ -180,27 +180,12 @@ static void process_messages_on_jack_queue(
 
     struct Message message;
     if (PaUtil_ReadRingBuffer(&state->io_thread_queue, &message, 1) > 0) {
-        switch (message.type) {
-        case MSG_SET_PLAYSPEC:
-            io_thread_set_playspec(state, driver, driver_handle, message.arg);
-            break;
-        case MSG_UNREF_AUDIO_CLIP:
-            io_thread_unref_audio_clip(state, driver, driver_handle, message.arg);
-            break;
-        case MSG_SET_POS:
-            io_thread_set_pos(state, driver, driver_handle, message.arg);
-            break;
-        case MSG_SET_TRANSPORT_STATE:
-            io_thread_set_transport_state(state, driver, driver_handle, message.arg);
-            break;
-        default:
-            abort();  /* Unknown message */
-            break;
-        }
+        message.callable.io_thread_callable(
+            state, driver, driver_handle, message.arg);
     }
 }
 
-static void py_thread_destroy_audio_clip(
+void py_thread_destroy_audio_clip(
     struct Interface *interface, union TaskArgument arg)
 {
     struct AudioClip *clip = arg.pointer;
@@ -208,7 +193,7 @@ static void py_thread_destroy_audio_clip(
     free(clip);
 }
 
-static void py_thread_destroy_playspec(
+void py_thread_destroy_playspec(
     struct Interface *interface, union TaskArgument arg)
 {
     struct Playspec *playspec = arg.pointer;
@@ -216,19 +201,19 @@ static void py_thread_destroy_playspec(
     free(playspec);
 }
 
-static void py_thread_receive_frame_rate(
+void py_thread_receive_frame_rate(
     struct Interface *interface, union TaskArgument arg)
 {
     interface->last_reported_frame_rate = arg.integer;
 }
 
-static void py_thread_receive_current_pos(
+void py_thread_receive_current_pos(
     struct Interface *interface, union TaskArgument arg)
 {
     interface->last_reported_position = arg.integer;
 }
 
-static void py_thread_receive_transport_state(
+void py_thread_receive_transport_state(
     struct Interface *interface, union TaskArgument arg)
 {
     interface->last_reported_is_transport_rolling = arg.integer;
@@ -241,26 +226,7 @@ void io_process_messages_on_python_queue(struct Interface *interface)
     struct Message message;
     while (PaUtil_ReadRingBuffer(
             &interface->python_thread_queue, &message, 1) > 0) {
-        switch (message.type) {
-        case MSG_DESTROY_AUDIO_CLIP:
-            py_thread_destroy_audio_clip(interface, message.arg);
-            break;
-        case MSG_DESTROY_PLAYSPEC:
-            py_thread_destroy_playspec(interface, message.arg);
-            break;
-        case MSG_FRAME_RATE:
-            py_thread_receive_frame_rate(interface, message.arg);
-            break;
-        case MSG_CURRENT_POS:
-            py_thread_receive_current_pos(interface, message.arg);
-            break;
-        case MSG_TRANSPORT_STATE:
-            py_thread_receive_transport_state(interface, message.arg);
-            break;
-        default:
-            abort();  /* Unknown message */
-            break;
-        }
+        message.callable.py_thread_callable(interface, message.arg);
     }
 }
 
@@ -383,9 +349,9 @@ jack_nframes_t process_input_output_with_buffers(
     /* Runs on the I/O thread */
 
     send_message_with_int_to_py_thread(
-        state, MSG_CURRENT_POS, frame_in_playspec);
+        state, py_thread_receive_current_pos, frame_in_playspec);
     send_message_with_int_to_py_thread(
-        state, MSG_TRANSPORT_STATE, is_transport_rolling?1:0);
+        state, py_thread_receive_transport_state, is_transport_rolling?1:0);
 
     clear_jack_port(port_l, port_r, nframes);
 
@@ -446,7 +412,7 @@ void io_set_playspec(struct Interface *interface,
     /* Runs on the Python thread */
 
     if (!send_message_with_ptr_to_io_thread(
-            interface, MSG_SET_PLAYSPEC, playspec)) {
+            interface, io_thread_set_playspec, playspec)) {
         // TODO handle failure
     }
 }
@@ -469,7 +435,7 @@ void io_set_position(struct Interface *interface, int position)
 {
     /* Runs on the Python thread */
 
-    send_message_with_int_to_io_thread(interface, MSG_SET_POS, position);
+    send_message_with_int_to_io_thread(interface, io_thread_set_pos, position);
 }
 
 int io_get_transport_rolling(struct Interface *interface)
@@ -484,5 +450,5 @@ void io_set_transport_rolling(struct Interface *interface, int rolling)
     /* Runs on the Python thread */
 
     send_message_with_int_to_io_thread(
-        interface, MSG_SET_TRANSPORT_STATE, rolling);
+        interface, io_thread_set_transport_state, rolling);
 }

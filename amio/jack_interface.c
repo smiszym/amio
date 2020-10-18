@@ -120,7 +120,7 @@ struct JackInterface * jackio_init(const char *client_name)
     }
 
     send_message_with_int_to_py_thread(
-        &jack_interface->interface, MSG_FRAME_RATE,
+        &jack_interface->interface, py_thread_receive_frame_rate,
         jack_get_sample_rate(jack_interface->client));
 
     jack_set_process_callback(
