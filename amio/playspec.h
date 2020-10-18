@@ -66,15 +66,15 @@ struct Playspec
     bool referenced_by_native_code;
 };
 
-struct Playspec * Playspec_init(int size);
-void Playspec_del(
-    struct JackInterface *jack_interface, struct Playspec *playspec);
-void Playspec_setEntry(struct Playspec *playspec, int n,
+extern struct Playspec *playspec_being_built;
+
+void Playspec_init(int size);
+void Playspec_setEntry(
+    int n,
     struct AudioClip *clip,
     int clip_frame_a, int clip_frame_b,
     int play_at_frame, int repeat_interval,
     float gain_l, float gain_r);
-void Playspec_setInsertionPoints(
-    struct Playspec *playspec, int insert_at, int start_from);
+void Playspec_setInsertionPoints(int insert_at, int start_from);
 
 #endif

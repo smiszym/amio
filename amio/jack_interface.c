@@ -243,10 +243,9 @@ void jackio_get_logs(
     io_get_logs(&jack_interface->interface, bytearray, n);
 }
 
-void jackio_set_playspec(struct JackInterface *jack_interface,
-                  struct Playspec *playspec)
+void jackio_set_playspec(struct JackInterface *jack_interface)
 {
-    io_set_playspec(&jack_interface->interface, playspec);
+    io_set_playspec(&jack_interface->interface);
 }
 
 int jackio_get_frame_rate(struct JackInterface *jack_interface)

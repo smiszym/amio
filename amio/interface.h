@@ -93,8 +93,7 @@ jack_nframes_t process_input_output_with_buffers(
     jack_default_audio_sample_t *port_l,
     jack_default_audio_sample_t *port_r);
 
-void io_set_playspec(struct Interface *interface,
-                  struct Playspec *playspec);
+void io_set_playspec(struct Interface *interface);
 int io_get_frame_rate(struct Interface *interface);
 int io_get_position(struct Interface *interface);
 void io_set_position(struct Interface *interface, int position);

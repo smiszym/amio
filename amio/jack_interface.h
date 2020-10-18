@@ -37,8 +37,7 @@ void jackio_close(struct JackInterface *jack_interface);
 void jackio_get_logs(
     struct JackInterface *jack_interface, char *bytearray, int n);
 
-void jackio_set_playspec(struct JackInterface *jack_interface,
-                  struct Playspec *playspec);
+void jackio_set_playspec(struct JackInterface *jack_interface);
 
 int jackio_get_frame_rate(struct JackInterface *jack_interface);
 

@@ -406,13 +406,13 @@ jack_nframes_t process_input_output_with_buffers(
     return frame_in_playspec;
 }
 
-void io_set_playspec(struct Interface *interface,
-                  struct Playspec *playspec)
+void io_set_playspec(struct Interface *interface)
 {
     /* Runs on the Python thread */
 
+    playspec_being_built->referenced_by_python = false;
     if (!post_task_with_ptr_to_io_thread(
-            interface, io_thread_set_playspec, playspec)) {
+            interface, io_thread_set_playspec, playspec_being_built)) {
         // TODO handle failure
     }
 }
