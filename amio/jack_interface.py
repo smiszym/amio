@@ -1,13 +1,13 @@
 from amio.audio_clip import ImmutableAudioClip, InputAudioChunk, AudioClip
 import amio._core
 from amio.interface import Interface, InputChunkCallback
-from amio.playspec import Playspec, set_playspec_as_current
+from amio.playspec import Playspec
 from datetime import datetime
 import logging
 import numpy as np
 import threading
 from time import sleep
-from typing import Optional
+from typing import List, Optional
 
 
 logger = logging.getLogger('amio')
@@ -17,7 +17,7 @@ class JackInterface(Interface):
     def __init__(self):
         self.jack_interface = None
         self.message_thread = None
-        self._keepalive_clips = None
+        self._keepalive_clips: List[Optional[ImmutableAudioClip]] = []
         self.should_stop = False
         self.should_stop_lock = threading.Lock()
         self._input_chunk_callback = None
@@ -100,7 +100,33 @@ class JackInterface(Interface):
             interface_frame_rate)
 
     def set_current_playspec(self, playspec: Playspec) -> None:
-        self._keepalive_clips = set_playspec_as_current(playspec)
+        size = len(playspec.entries)
+        amio._core.Playspec_init(size)
+        self._keepalive_clips = [None for i in range(size)]
+        for n, entry in enumerate(playspec.entries):
+            entry = playspec.entries[n]
+            # Storing in the list to keep this ImmutableAudioClip alive
+            if isinstance(entry.clip, ImmutableAudioClip):
+                self._keepalive_clips[n] = entry.clip
+                amio._core.Playspec_setEntry(
+                    n, entry.clip.io_owned_clip,
+                    entry.frame_a, entry.frame_b,
+                    entry.play_at_frame, entry.repeat_interval,
+                    entry.gain_l, entry.gain_r)
+            elif isinstance(entry.clip, AudioClip):
+                immutable_clip = (playspec.jack_interface
+                                  .generate_immutable_clip(entry.clip))
+                self._keepalive_clips[n] = immutable_clip
+                amio._core.Playspec_setEntry(
+                    n, immutable_clip.io_owned_clip,
+                    entry.frame_a, entry.frame_b,
+                    entry.play_at_frame, entry.repeat_interval,
+                    entry.gain_l, entry.gain_r)
+            else:
+                raise ValueError("Wrong audio clip type")
+        amio._core.Playspec_setInsertionPoints(
+            playspec.insert_at, playspec.start_from)
+        amio._core.jackio_set_playspec(playspec.jack_interface.jack_interface)
 
     def close(self) -> None:
         with self.should_stop_lock:

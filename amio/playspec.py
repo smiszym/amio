@@ -10,38 +10,6 @@ class PlayspecEntry(namedtuple(
     pass
 
 
-def set_playspec_as_current(playspec: 'Playspec'):
-    size = len(playspec.entries)
-    amio._core.Playspec_init(size)
-    keepalive_clips: List[Optional[ImmutableAudioClip]] = [
-        None for i in range(size)]
-    for n, entry in enumerate(playspec.entries):
-        entry = playspec.entries[n]
-        # Storing in the list to keep this ImmutableAudioClip alive
-        if isinstance(entry.clip, ImmutableAudioClip):
-            keepalive_clips[n] = entry.clip
-            amio._core.Playspec_setEntry(
-                n, entry.clip.io_owned_clip,
-                entry.frame_a, entry.frame_b,
-                entry.play_at_frame, entry.repeat_interval,
-                entry.gain_l, entry.gain_r)
-        elif isinstance(entry.clip, AudioClip):
-            immutable_clip = (playspec.jack_interface
-                              .generate_immutable_clip(entry.clip))
-            keepalive_clips[n] = immutable_clip
-            amio._core.Playspec_setEntry(
-                n, immutable_clip.io_owned_clip,
-                entry.frame_a, entry.frame_b,
-                entry.play_at_frame, entry.repeat_interval,
-                entry.gain_l, entry.gain_r)
-        else:
-            raise ValueError("Wrong audio clip type")
-    amio._core.Playspec_setInsertionPoints(
-        playspec.insert_at, playspec.start_from)
-    amio._core.jackio_set_playspec(playspec.jack_interface.jack_interface)
-    return keepalive_clips
-
-
 class Playspec:
     def __init__(self, jack_interface: 'amio.jack_interface.JackInterface',
                  size: int):
