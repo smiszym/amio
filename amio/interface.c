@@ -84,7 +84,7 @@ static int apply_pending_playspec_if_needed(
     new_playspec->referenced_by_native_code = true;
 
     /* Destroy the old playspec if needed */
-    if (old_playspec && !old_playspec->referenced_by_python) {
+    if (old_playspec) {
         if (!post_task_with_ptr_to_py_thread(
             state, py_thread_destroy_playspec, old_playspec)) {
             // TODO handle failure
@@ -410,11 +410,11 @@ void io_set_playspec(struct Interface *interface)
 {
     /* Runs on the Python thread */
 
-    playspec_being_built->referenced_by_python = false;
     if (!post_task_with_ptr_to_io_thread(
             interface, io_thread_set_playspec, playspec_being_built)) {
         // TODO handle failure
     }
+    playspec_being_built = NULL;
 }
 
 int io_get_frame_rate(struct Interface *interface)

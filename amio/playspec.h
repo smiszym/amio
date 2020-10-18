@@ -55,8 +55,6 @@ struct Playspec
      */
     int start_from;
 
-    /* Indicator whether Python has a reference to this playspec */
-    bool referenced_by_python;
     /*
      * Playspec is referenced by the native code since it's passed
      * to it in MSG_SET_PLAYSPEC message, through replacing

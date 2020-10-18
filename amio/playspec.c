@@ -10,7 +10,6 @@ void Playspec_init(int size)
     /* Runs on the Python thread */
 
     playspec_being_built = malloc(sizeof(struct Playspec));
-    playspec_being_built->referenced_by_python = true;
     playspec_being_built->num_entries = size;
     playspec_being_built->entries = malloc(
         size * sizeof(struct PlayspecEntry));
