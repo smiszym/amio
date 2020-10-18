@@ -26,14 +26,13 @@ void InputChunk_del(struct InputChunk *clip);
 
 /* Playspec interface */
 
-void Playspec_init(int size);
-void Playspec_setEntry(
+void begin_defining_playspec(int size, int insert_at, int start_from);
+void set_entry_in_playspec(
     int n,
     struct AudioClip *clip,
     int clip_frame_a, int clip_frame_b,
     int play_at_frame, int repeat_interval,
     float gain_l, float gain_r);
-void Playspec_setInsertionPoints(int insert_at, int start_from);
 
 /* JackInterface interface */
 
@@ -67,14 +66,13 @@ void InputChunk_del(struct InputChunk *clip);
 
 /* Playspec interface */
 
-void Playspec_init(int size);
-void Playspec_setEntry(
+void begin_defining_playspec(int size, int insert_at, int start_from);
+void set_entry_in_playspec(
     int n,
     struct AudioClip *clip,
     int clip_frame_a, int clip_frame_b,
     int play_at_frame, int repeat_interval,
     float gain_l, float gain_r);
-void Playspec_setInsertionPoints(int insert_at, int start_from);
 
 /* JackInterface interface */
 

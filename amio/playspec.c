@@ -5,7 +5,7 @@
 
 struct Playspec *playspec_being_built = NULL;
 
-void Playspec_init(int size)
+void begin_defining_playspec(int size, int insert_at, int start_from)
 {
     /* Runs on the Python thread */
 
@@ -23,11 +23,11 @@ void Playspec_init(int size)
         playspec_being_built->entries[i].gain_r = 1.0;
     }
 
-    playspec_being_built->insert_at = -1;
-    playspec_being_built->start_from = 0;
+    playspec_being_built->insert_at = insert_at;
+    playspec_being_built->start_from = start_from;
 }
 
-void Playspec_setEntry(
+void set_entry_in_playspec(
     int n,
     struct AudioClip *clip,
     int clip_frame_a, int clip_frame_b,
@@ -46,12 +46,4 @@ void Playspec_setEntry(
     playspec_being_built->entries[n].repeat_interval = repeat_interval;
     playspec_being_built->entries[n].gain_l = gain_l;
     playspec_being_built->entries[n].gain_r = gain_r;
-}
-
-void Playspec_setInsertionPoints(int insert_at, int start_from)
-{
-    /* Runs on the Python thread */
-
-    playspec_being_built->insert_at = insert_at;
-    playspec_being_built->start_from = start_from;
 }

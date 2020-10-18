@@ -35,9 +35,13 @@ class ImmutableAudioClip:
 
     def __del__(self):
         amio._core.AudioClip_del(
-            self.jack_client.jack_interface,
-            self.io_owned_clip)
-        self.io_owned_clip = None
+            self.jack_client.jack_interface, self.io_owned_clip)
+
+    def use_as_playspec_entry(self, n, frame_a, frame_b, play_at_frame,
+                              repeat_interval, gain_l, gain_r):
+        amio._core.set_entry_in_playspec(
+            n, self.io_owned_clip, frame_a, frame_b, play_at_frame,
+            repeat_interval, gain_l, gain_r)
 
 
 class AudioClip:

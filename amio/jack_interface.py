@@ -102,31 +102,26 @@ class JackInterface(Interface):
 
     def set_current_playspec(self, playspec: Playspec) -> None:
         size = len(playspec.entries)
-        amio._core.Playspec_init(size)
+        amio._core.begin_defining_playspec(
+            size, playspec.insert_at, playspec.start_from)
         self._keepalive_clips = [None for i in range(size)]
         for n, entry in enumerate(playspec.entries):
             entry = playspec.entries[n]
             # Storing in the list to keep this ImmutableAudioClip alive
             if isinstance(entry.clip, ImmutableAudioClip):
                 self._keepalive_clips[n] = entry.clip
-                amio._core.Playspec_setEntry(
-                    n, entry.clip.io_owned_clip,
-                    entry.frame_a, entry.frame_b,
-                    entry.play_at_frame, entry.repeat_interval,
-                    entry.gain_l, entry.gain_r)
+                entry.clip.use_as_playspec_entry(
+                    n, entry.frame_a, entry.frame_b, entry.play_at_frame,
+                    entry.repeat_interval, entry.gain_l, entry.gain_r)
             elif isinstance(entry.clip, AudioClip):
                 immutable_clip = (playspec.jack_interface
                                   .generate_immutable_clip(entry.clip))
                 self._keepalive_clips[n] = immutable_clip
-                amio._core.Playspec_setEntry(
-                    n, immutable_clip.io_owned_clip,
-                    entry.frame_a, entry.frame_b,
-                    entry.play_at_frame, entry.repeat_interval,
-                    entry.gain_l, entry.gain_r)
+                immutable_clip.use_as_playspec_entry(
+                    n, entry.frame_a, entry.frame_b, entry.play_at_frame,
+                    entry.repeat_interval, entry.gain_l, entry.gain_r)
             else:
                 raise ValueError("Wrong audio clip type")
-        amio._core.Playspec_setInsertionPoints(
-            playspec.insert_at, playspec.start_from)
         amio._core.jackio_set_playspec(playspec.jack_interface.jack_interface)
 
     def close(self) -> None:
