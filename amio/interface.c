@@ -8,21 +8,21 @@
 void io_init(struct Interface *interface)
 {
     interface->python_thread_queue_buffer = malloc(
-        THREAD_QUEUE_SIZE * sizeof(struct Message));
+        THREAD_QUEUE_SIZE * sizeof(struct Task));
     interface->io_thread_queue_buffer = malloc(
-        THREAD_QUEUE_SIZE * sizeof(struct Message));
+        THREAD_QUEUE_SIZE * sizeof(struct Task));
     interface->log_queue_buffer = malloc(LOG_QUEUE_SIZE * sizeof(char));
     interface->input_chunk_queue_buffer = malloc(
         INPUT_CLIP_QUEUE_SIZE * sizeof(struct InputChunk));
 
     PaUtil_InitializeRingBuffer(
         &interface->python_thread_queue,
-        sizeof(struct Message),
+        sizeof(struct Task),
         THREAD_QUEUE_SIZE,
         interface->python_thread_queue_buffer);
     PaUtil_InitializeRingBuffer(
         &interface->io_thread_queue,
-        sizeof(struct Message),
+        sizeof(struct Task),
         THREAD_QUEUE_SIZE,
         interface->io_thread_queue_buffer);
     PaUtil_InitializeRingBuffer(
@@ -85,7 +85,7 @@ static int apply_pending_playspec_if_needed(
 
     /* Destroy the old playspec if needed */
     if (old_playspec && !old_playspec->referenced_by_python) {
-        if (!send_message_with_ptr_to_py_thread(
+        if (!post_task_with_ptr_to_py_thread(
             state, py_thread_destroy_playspec, old_playspec)) {
             // TODO handle failure
         }
@@ -121,7 +121,7 @@ static int apply_pending_playspec_if_needed(
             if (clip &&
                     !clip->referenced_by_current_playspec &&
                     !clip->referenced_by_python) {
-                if (!send_message_with_ptr_to_py_thread(
+                if (!post_task_with_ptr_to_py_thread(
                     state, py_thread_destroy_audio_clip, clip)) {
                     // TODO handle failure
                 }
@@ -148,7 +148,7 @@ void io_thread_unref_audio_clip(
     struct AudioClip *clip = arg.pointer;
     clip->referenced_by_python = false;
     if (!clip->referenced_by_current_playspec) {
-        if (!send_message_with_ptr_to_py_thread(
+        if (!post_task_with_ptr_to_py_thread(
                 state, py_thread_destroy_audio_clip, clip)) {
             // TODO handle failure
         }
@@ -178,7 +178,7 @@ static void process_messages_on_jack_queue(
 {
     /* Runs on the I/O thread */
 
-    struct Message message;
+    struct Task message;
     if (PaUtil_ReadRingBuffer(&state->io_thread_queue, &message, 1) > 0) {
         message.callable.io_thread_callable(
             state, driver, driver_handle, message.arg);
@@ -223,7 +223,7 @@ void io_process_messages_on_python_queue(struct Interface *interface)
 {
     /* Runs on the Python thread */
 
-    struct Message message;
+    struct Task message;
     while (PaUtil_ReadRingBuffer(
             &interface->python_thread_queue, &message, 1) > 0) {
         message.callable.py_thread_callable(interface, message.arg);
@@ -348,9 +348,9 @@ jack_nframes_t process_input_output_with_buffers(
 {
     /* Runs on the I/O thread */
 
-    send_message_with_int_to_py_thread(
+    post_task_with_int_to_py_thread(
         state, py_thread_receive_current_pos, frame_in_playspec);
-    send_message_with_int_to_py_thread(
+    post_task_with_int_to_py_thread(
         state, py_thread_receive_transport_state, is_transport_rolling?1:0);
 
     clear_jack_port(port_l, port_r, nframes);
@@ -411,7 +411,7 @@ void io_set_playspec(struct Interface *interface,
 {
     /* Runs on the Python thread */
 
-    if (!send_message_with_ptr_to_io_thread(
+    if (!post_task_with_ptr_to_io_thread(
             interface, io_thread_set_playspec, playspec)) {
         // TODO handle failure
     }
@@ -435,7 +435,7 @@ void io_set_position(struct Interface *interface, int position)
 {
     /* Runs on the Python thread */
 
-    send_message_with_int_to_io_thread(interface, io_thread_set_pos, position);
+    post_task_with_int_to_io_thread(interface, io_thread_set_pos, position);
 }
 
 int io_get_transport_rolling(struct Interface *interface)
@@ -449,6 +449,6 @@ void io_set_transport_rolling(struct Interface *interface, int rolling)
 {
     /* Runs on the Python thread */
 
-    send_message_with_int_to_io_thread(
+    post_task_with_int_to_io_thread(
         interface, io_thread_set_transport_state, rolling);
 }

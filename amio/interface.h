@@ -26,14 +26,14 @@ struct Interface
      * from the I/O thread to the Python thread
      */
     PaUtilRingBuffer python_thread_queue;
-    struct Message *python_thread_queue_buffer;
+    struct Task *python_thread_queue_buffer;
 
     /*
      * I/O thread queue - used for passing messages
      * from the Python thread to the I/O thread
      */
     PaUtilRingBuffer io_thread_queue;
-    struct Message *io_thread_queue_buffer;
+    struct Task *io_thread_queue_buffer;
 
     /*
      * Ring buffer containing characters that were scheduled by the I/O thread

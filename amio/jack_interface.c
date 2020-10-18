@@ -119,7 +119,7 @@ struct JackInterface * jackio_init(const char *client_name)
         fprintf(stderr, "Unique name `%s' assigned\n", client_name);
     }
 
-    send_message_with_int_to_py_thread(
+    post_task_with_int_to_py_thread(
         &jack_interface->interface, py_thread_receive_frame_rate,
         jack_get_sample_rate(jack_interface->client));
 

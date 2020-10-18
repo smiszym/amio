@@ -33,7 +33,7 @@ union TaskCallable
     IoThreadCallable io_thread_callable;
 };
 
-struct Message
+struct Task
 {
     union TaskCallable callable;
     union TaskArgument arg;
@@ -44,13 +44,13 @@ struct Message
 #define LOG_QUEUE_SIZE 65536
 #define INPUT_CLIP_QUEUE_SIZE 2048
 
-bool send_message_with_ptr_to_py_thread(
+bool post_task_with_ptr_to_py_thread(
     struct Interface *interface, PyThreadCallable callable, void *arg_ptr);
-bool send_message_with_ptr_to_io_thread(
+bool post_task_with_ptr_to_io_thread(
     struct Interface *interface, IoThreadCallable callable, void *arg_ptr);
-bool send_message_with_int_to_py_thread(
+bool post_task_with_int_to_py_thread(
     struct Interface *interface, PyThreadCallable callable, int arg_int);
-bool send_message_with_int_to_io_thread(
+bool post_task_with_int_to_io_thread(
     struct Interface *interface, IoThreadCallable callable, int arg_int);
 bool write_log(struct Interface *state, char *s);
 void io_get_logs(struct Interface *interface, char *bytearray, int n);
