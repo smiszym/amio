@@ -134,6 +134,46 @@ static int apply_pending_playspec_if_needed(
     return frame_in_playspec;
 }
 
+static void io_thread_set_playspec(
+    struct Interface *state, struct DriverInterface *driver,
+    void *driver_handle, union TaskArgument arg)
+{
+    write_log(state, "I/O thread: Got MSG_SET_PLAYSPEC\n");
+    state->pending_playspec = arg.pointer;
+}
+
+static void io_thread_unref_audio_clip(
+    struct Interface *state, struct DriverInterface *driver,
+    void *driver_handle, union TaskArgument arg)
+{
+    write_log(state, "I/O thread: Got MSG_UNREF_AUDIO_CLIP\n");
+    struct AudioClip *clip = arg.pointer;
+    clip->referenced_by_python = false;
+    if (!clip->referenced_by_current_playspec) {
+        if (!send_message_with_ptr(
+            &state->python_thread_queue,
+            MSG_DESTROY_AUDIO_CLIP, clip)) {
+            // TODO handle failure
+        }
+    }
+}
+
+static void io_thread_set_pos(
+    struct Interface *state, struct DriverInterface *driver,
+    void *driver_handle, union TaskArgument arg)
+{
+    write_log(state, "I/O thread: Got MSG_SET_POS\n");
+    driver->set_position(driver_handle, arg.integer);
+}
+
+static void io_thread_set_transport_state(
+    struct Interface *state, struct DriverInterface *driver,
+    void *driver_handle, union TaskArgument arg)
+{
+    write_log(state, "I/O thread: Got MSG_SET_TRANSPORT_STATE\n");
+    driver->set_is_transport_rolling(driver_handle, arg.integer);
+}
+
 static void process_messages_on_jack_queue(
     struct Interface *state,
     struct DriverInterface *driver,
@@ -142,33 +182,19 @@ static void process_messages_on_jack_queue(
     /* Runs on the I/O thread */
 
     struct Message message;
-    struct AudioClip *clip;
-
     if (PaUtil_ReadRingBuffer(&state->io_thread_queue, &message, 1) > 0) {
         switch (message.type) {
         case MSG_SET_PLAYSPEC:
-            write_log(state, "I/O thread: Got MSG_SET_PLAYSPEC\n");
-            state->pending_playspec = message.arg.pointer;
+            io_thread_set_playspec(state, driver, driver_handle, message.arg);
             break;
         case MSG_UNREF_AUDIO_CLIP:
-            write_log(state, "I/O thread: Got MSG_UNREF_AUDIO_CLIP\n");
-            clip = message.arg.pointer;
-            clip->referenced_by_python = false;
-            if (!clip->referenced_by_current_playspec) {
-                if (!send_message_with_ptr(
-                    &state->python_thread_queue,
-                    MSG_DESTROY_AUDIO_CLIP, clip)) {
-                    // TODO handle failure
-                }
-            }
+            io_thread_unref_audio_clip(state, driver, driver_handle, message.arg);
             break;
         case MSG_SET_POS:
-            write_log(state, "I/O thread: Got MSG_SET_POS\n");
-            driver->set_position(driver_handle, message.arg.integer);
+            io_thread_set_pos(state, driver, driver_handle, message.arg);
             break;
         case MSG_SET_TRANSPORT_STATE:
-            write_log(state, "I/O thread: Got MSG_SET_TRANSPORT_STATE\n");
-            driver->set_is_transport_rolling(driver_handle, message.arg.integer);
+            io_thread_set_transport_state(state, driver, driver_handle, message.arg);
             break;
         default:
             abort();  /* Unknown message */
