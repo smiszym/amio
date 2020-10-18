@@ -177,35 +177,62 @@ static void process_messages_on_jack_queue(
     }
 }
 
+static void py_thread_destroy_audio_clip(
+    struct Interface *interface, union TaskArgument arg)
+{
+    struct AudioClip *clip = arg.pointer;
+    free(clip->data);
+    free(clip);
+}
+
+static void py_thread_destroy_playspec(
+    struct Interface *interface, union TaskArgument arg)
+{
+    struct Playspec *playspec = arg.pointer;
+    free(playspec->entries);
+    free(playspec);
+}
+
+static void py_thread_receive_frame_rate(
+    struct Interface *interface, union TaskArgument arg)
+{
+    interface->last_reported_frame_rate = arg.integer;
+}
+
+static void py_thread_receive_current_pos(
+    struct Interface *interface, union TaskArgument arg)
+{
+    interface->last_reported_position = arg.integer;
+}
+
+static void py_thread_receive_transport_state(
+    struct Interface *interface, union TaskArgument arg)
+{
+    interface->last_reported_is_transport_rolling = arg.integer;
+}
+
 void io_process_messages_on_python_queue(struct Interface *interface)
 {
     /* Runs on the Python thread */
 
     struct Message message;
-    struct AudioClip *clip;
-    struct Playspec *playspec;
-
     while (PaUtil_ReadRingBuffer(
             &interface->python_thread_queue, &message, 1) > 0) {
         switch (message.type) {
         case MSG_DESTROY_AUDIO_CLIP:
-            clip = message.arg.pointer;
-            free(clip->data);
-            free(clip);
+            py_thread_destroy_audio_clip(interface, message.arg);
             break;
         case MSG_DESTROY_PLAYSPEC:
-            playspec = message.arg.pointer;
-            free(playspec->entries);
-            free(playspec);
+            py_thread_destroy_playspec(interface, message.arg);
             break;
         case MSG_FRAME_RATE:
-            interface->last_reported_frame_rate = message.arg.integer;
+            py_thread_receive_frame_rate(interface, message.arg);
             break;
         case MSG_CURRENT_POS:
-            interface->last_reported_position = message.arg.integer;
+            py_thread_receive_current_pos(interface, message.arg);
             break;
         case MSG_TRANSPORT_STATE:
-            interface->last_reported_is_transport_rolling = message.arg.integer;
+            py_thread_receive_transport_state(interface, message.arg);
             break;
         default:
             abort();  /* Unknown message */
