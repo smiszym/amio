@@ -5,20 +5,36 @@
 #include "interface.h"
 #include "string.h"
 
-bool send_message_with_ptr(
-        PaUtilRingBuffer *buffer, int type, void *arg_ptr) {
+bool send_message_with_ptr_to_py_thread(
+        struct Interface *interface, int type, void *arg_ptr) {
     struct Message msg;
     msg.type = type;
     msg.arg.pointer = arg_ptr;
-    return PaUtil_WriteRingBuffer(buffer, &msg, 1) > 0;
+    return PaUtil_WriteRingBuffer(&interface->python_thread_queue, &msg, 1) > 0;
 }
 
-bool send_message_with_int(
-        PaUtilRingBuffer *buffer, int type, int arg_int) {
+bool send_message_with_ptr_to_io_thread(
+        struct Interface *interface, int type, void *arg_ptr) {
+    struct Message msg;
+    msg.type = type;
+    msg.arg.pointer = arg_ptr;
+    return PaUtil_WriteRingBuffer(&interface->io_thread_queue, &msg, 1) > 0;
+}
+
+bool send_message_with_int_to_py_thread(
+        struct Interface *interface, int type, int arg_int) {
     struct Message msg;
     msg.type = type;
     msg.arg.integer = arg_int;
-    return PaUtil_WriteRingBuffer(buffer, &msg, 1) > 0;
+    return PaUtil_WriteRingBuffer(&interface->python_thread_queue, &msg, 1) > 0;
+}
+
+bool send_message_with_int_to_io_thread(
+        struct Interface *interface, int type, int arg_int) {
+    struct Message msg;
+    msg.type = type;
+    msg.arg.integer = arg_int;
+    return PaUtil_WriteRingBuffer(&interface->io_thread_queue, &msg, 1) > 0;
 }
 
 bool write_log(struct Interface *state, char *s)

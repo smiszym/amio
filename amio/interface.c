@@ -85,9 +85,8 @@ static int apply_pending_playspec_if_needed(
 
     /* Destroy the old playspec if needed */
     if (old_playspec && !old_playspec->referenced_by_python) {
-        if (!send_message_with_ptr(
-            &state->python_thread_queue,
-            MSG_DESTROY_PLAYSPEC, old_playspec)) {
+        if (!send_message_with_ptr_to_py_thread(
+            state, MSG_DESTROY_PLAYSPEC, old_playspec)) {
             // TODO handle failure
         }
     }
@@ -122,9 +121,8 @@ static int apply_pending_playspec_if_needed(
             if (clip &&
                     !clip->referenced_by_current_playspec &&
                     !clip->referenced_by_python) {
-                if (!send_message_with_ptr(
-                    &state->python_thread_queue,
-                    MSG_DESTROY_AUDIO_CLIP, clip)) {
+                if (!send_message_with_ptr_to_py_thread(
+                    state, MSG_DESTROY_AUDIO_CLIP, clip)) {
                     // TODO handle failure
                 }
             }
@@ -150,9 +148,8 @@ static void io_thread_unref_audio_clip(
     struct AudioClip *clip = arg.pointer;
     clip->referenced_by_python = false;
     if (!clip->referenced_by_current_playspec) {
-        if (!send_message_with_ptr(
-            &state->python_thread_queue,
-            MSG_DESTROY_AUDIO_CLIP, clip)) {
+        if (!send_message_with_ptr_to_py_thread(
+                state, MSG_DESTROY_AUDIO_CLIP, clip)) {
             // TODO handle failure
         }
     }
@@ -385,10 +382,10 @@ jack_nframes_t process_input_output_with_buffers(
 {
     /* Runs on the I/O thread */
 
-    send_message_with_int(
-        &state->python_thread_queue, MSG_CURRENT_POS, frame_in_playspec);
-    send_message_with_int(
-        &state->python_thread_queue, MSG_TRANSPORT_STATE, is_transport_rolling?1:0);
+    send_message_with_int_to_py_thread(
+        state, MSG_CURRENT_POS, frame_in_playspec);
+    send_message_with_int_to_py_thread(
+        state, MSG_TRANSPORT_STATE, is_transport_rolling?1:0);
 
     clear_jack_port(port_l, port_r, nframes);
 
@@ -448,8 +445,8 @@ void io_set_playspec(struct Interface *interface,
 {
     /* Runs on the Python thread */
 
-    if (!send_message_with_ptr(
-            &interface->io_thread_queue, MSG_SET_PLAYSPEC, playspec)) {
+    if (!send_message_with_ptr_to_io_thread(
+            interface, MSG_SET_PLAYSPEC, playspec)) {
         // TODO handle failure
     }
 }
@@ -472,8 +469,7 @@ void io_set_position(struct Interface *interface, int position)
 {
     /* Runs on the Python thread */
 
-    send_message_with_int(
-        &interface->io_thread_queue, MSG_SET_POS, position);
+    send_message_with_int_to_io_thread(interface, MSG_SET_POS, position);
 }
 
 int io_get_transport_rolling(struct Interface *interface)
@@ -487,6 +483,6 @@ void io_set_transport_rolling(struct Interface *interface, int rolling)
 {
     /* Runs on the Python thread */
 
-    send_message_with_int(
-        &interface->io_thread_queue, MSG_SET_TRANSPORT_STATE, rolling);
+    send_message_with_int_to_io_thread(
+        interface, MSG_SET_TRANSPORT_STATE, rolling);
 }

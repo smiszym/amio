@@ -25,9 +25,8 @@ void AudioClip_del(
 {
     /* Runs on the Python thread */
 
-    if (!send_message_with_ptr(
-            &(jack_interface->interface.io_thread_queue),
-            MSG_UNREF_AUDIO_CLIP, clip)) {
+    if (!send_message_with_ptr_to_io_thread(
+            &jack_interface->interface, MSG_UNREF_AUDIO_CLIP, clip)) {
         // TODO handle failure
     }
 }
