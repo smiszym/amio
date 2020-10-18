@@ -10,13 +10,16 @@
 
 struct Interface;
 
+union TaskArgument
+{
+    void *pointer;
+    int integer;
+};
+
 struct Message
 {
     int type;
-    union {
-        void *arg_ptr;
-        int arg_int;
-    };
+    union TaskArgument arg;
 };
 
 /* Python thread -> I/O thread */

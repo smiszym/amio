@@ -148,11 +148,11 @@ static void process_messages_on_jack_queue(
         switch (message.type) {
         case MSG_SET_PLAYSPEC:
             write_log(state, "I/O thread: Got MSG_SET_PLAYSPEC\n");
-            state->pending_playspec = message.arg_ptr;
+            state->pending_playspec = message.arg.pointer;
             break;
         case MSG_UNREF_AUDIO_CLIP:
             write_log(state, "I/O thread: Got MSG_UNREF_AUDIO_CLIP\n");
-            clip = message.arg_ptr;
+            clip = message.arg.pointer;
             clip->referenced_by_python = false;
             if (!clip->referenced_by_current_playspec) {
                 if (!send_message_with_ptr(
@@ -164,11 +164,11 @@ static void process_messages_on_jack_queue(
             break;
         case MSG_SET_POS:
             write_log(state, "I/O thread: Got MSG_SET_POS\n");
-            driver->set_position(driver_handle, message.arg_int);
+            driver->set_position(driver_handle, message.arg.integer);
             break;
         case MSG_SET_TRANSPORT_STATE:
             write_log(state, "I/O thread: Got MSG_SET_TRANSPORT_STATE\n");
-            driver->set_is_transport_rolling(driver_handle, message.arg_int);
+            driver->set_is_transport_rolling(driver_handle, message.arg.integer);
             break;
         default:
             abort();  /* Unknown message */
@@ -189,23 +189,23 @@ void io_process_messages_on_python_queue(struct Interface *interface)
             &interface->python_thread_queue, &message, 1) > 0) {
         switch (message.type) {
         case MSG_DESTROY_AUDIO_CLIP:
-            clip = message.arg_ptr;
+            clip = message.arg.pointer;
             free(clip->data);
             free(clip);
             break;
         case MSG_DESTROY_PLAYSPEC:
-            playspec = message.arg_ptr;
+            playspec = message.arg.pointer;
             free(playspec->entries);
             free(playspec);
             break;
         case MSG_FRAME_RATE:
-            interface->last_reported_frame_rate = message.arg_int;
+            interface->last_reported_frame_rate = message.arg.integer;
             break;
         case MSG_CURRENT_POS:
-            interface->last_reported_position = message.arg_int;
+            interface->last_reported_position = message.arg.integer;
             break;
         case MSG_TRANSPORT_STATE:
-            interface->last_reported_is_transport_rolling = message.arg_int;
+            interface->last_reported_is_transport_rolling = message.arg.integer;
             break;
         default:
             abort();  /* Unknown message */

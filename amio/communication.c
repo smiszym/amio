@@ -9,7 +9,7 @@ bool send_message_with_ptr(
         PaUtilRingBuffer *buffer, int type, void *arg_ptr) {
     struct Message msg;
     msg.type = type;
-    msg.arg_ptr = arg_ptr;
+    msg.arg.pointer = arg_ptr;
     return PaUtil_WriteRingBuffer(buffer, &msg, 1) > 0;
 }
 
@@ -17,7 +17,7 @@ bool send_message_with_int(
         PaUtilRingBuffer *buffer, int type, int arg_int) {
     struct Message msg;
     msg.type = type;
-    msg.arg_int = arg_int;
+    msg.arg.integer = arg_int;
     return PaUtil_WriteRingBuffer(buffer, &msg, 1) > 0;
 }
 
