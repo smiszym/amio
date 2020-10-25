@@ -100,10 +100,11 @@ class JackInterface(Interface):
             audio_clip.channels,
             interface_frame_rate)
 
-    def set_current_playspec(self, playspec: Playspec) -> None:
+    def set_current_playspec(self,
+            playspec: Playspec, insert_at: int, start_from: int) -> None:
         size = len(playspec.entries)
         amio._core.begin_defining_playspec(
-            size, playspec.insert_at, playspec.start_from)
+            size, insert_at, start_from)
         self._keepalive_clips = [None for i in range(size)]
         for n, entry in enumerate(playspec.entries):
             entry = playspec.entries[n]

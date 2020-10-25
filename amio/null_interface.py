@@ -55,9 +55,12 @@ class NullInterface(Interface):
         assert not self._closed
         self._is_transport_rolling = rolling
 
-    def set_current_playspec(self, playspec: Playspec) -> None:
+    def set_current_playspec(self,
+            playspec: Playspec, insert_at: int, start_from: int) -> None:
         assert not self._closed
         self._playspec = playspec
+        self._position = start_from
+        # TODO Support insert_at
 
     def close(self) -> None:
         assert not self._closed
