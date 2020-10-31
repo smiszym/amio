@@ -15,25 +15,13 @@ logger = logging.getLogger('amio')
 
 class JackInterface(Interface):
     def __init__(self):
+        super().__init__()
         self.jack_interface = None
         self.message_thread = None
         self._keepalive_clips: List[Optional[ImmutableAudioClip]] = []
         self.should_stop = False
         self.should_stop_lock = threading.Lock()
-        self._input_chunk_callback = None
         self._pending_logs = ""
-
-    @property
-    def input_chunk_callback(self) -> InputChunkCallback:
-        return self._input_chunk_callback
-
-    @input_chunk_callback.setter
-    def input_chunk_callback(self, callback: InputChunkCallback):
-        self._input_chunk_callback = callback
-
-    def _notify_input_chunk(self, data: InputAudioChunk) -> None:
-        if self._input_chunk_callback is not None:
-            self._input_chunk_callback(data)
 
     def init(self, client_name: str) -> None:
         self.jack_interface = amio._core.jackio_init(client_name)

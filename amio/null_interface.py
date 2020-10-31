@@ -15,21 +15,13 @@ class NullInterface(Interface):
     chunk_length = 4800  # 0.1 s at 48 kHz
 
     def __init__(self, frame_rate: float, starting_time: datetime = None):
+        super().__init__()
         self._frame_rate = frame_rate
         self._position = 0
         self._is_transport_rolling = False
         self._playspec: Optional[Playspec] = None
         self._closed = False
-        self._input_chunk_callback: Optional[InputChunkCallback] = None
         self._time = starting_time or datetime.now()
-
-    @property
-    def input_chunk_callback(self) -> Optional[InputChunkCallback]:
-        return self._input_chunk_callback
-
-    @input_chunk_callback.setter
-    def input_chunk_callback(self, callback: InputChunkCallback):
-        self._input_chunk_callback = callback
 
     def advance_single_chunk_length(self) -> None:
         chunk = InputAudioChunk(
@@ -38,8 +30,7 @@ class NullInterface(Interface):
         if self._is_transport_rolling:
             self._position += self.chunk_length
         self._time += timedelta(seconds=(self.chunk_length / self._frame_rate))
-        if self._input_chunk_callback is not None:
-            self._input_chunk_callback(chunk)
+        self._notify_input_chunk(chunk)
 
     def get_current_virtual_time(self) -> datetime:
         return self._time

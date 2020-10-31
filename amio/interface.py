@@ -7,6 +7,17 @@ InputChunkCallback = Callable[[InputAudioChunk], None]
 
 
 class Interface:
+    def __init__(self):
+        self._input_chunk_callback = None
+
+    @property
+    def input_chunk_callback(self) -> InputChunkCallback:
+        return self._input_chunk_callback
+
+    @input_chunk_callback.setter
+    def input_chunk_callback(self, callback: InputChunkCallback):
+        self._input_chunk_callback = callback
+
     def secs_to_frame(self, seconds: float) -> int:
         return int(self.get_frame_rate() * seconds)
 
@@ -43,3 +54,7 @@ class Interface:
     @property
     def closed(self) -> bool:
         return self.is_closed()
+
+    def _notify_input_chunk(self, data: InputAudioChunk) -> None:
+        if self._input_chunk_callback is not None:
+            self._input_chunk_callback(data)
