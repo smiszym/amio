@@ -54,7 +54,8 @@ void io_close(struct Interface *interface)
 
 static int apply_pending_playspec_if_needed(
     struct Interface *state,
-    int frame_in_playspec)
+    int frame_in_playspec,
+    int start_from_offset)
 {
     struct Playspec *old_playspec = state->current_playspec;
     struct Playspec *new_playspec = state->pending_playspec;
@@ -68,17 +69,14 @@ static int apply_pending_playspec_if_needed(
         return frame_in_playspec;
     }
 
-    if (new_playspec->insert_at != -1
-            && old_playspec
-            && frame_in_playspec != new_playspec->insert_at)
+    if (old_playspec && frame_in_playspec < new_playspec->insert_at)
         return frame_in_playspec;  /* We should wait and change the playspec later */
 
     /* Either there is no current playspec, or we already hit insert_at */
 
     state->current_playspec = state->pending_playspec;
     state->pending_playspec = NULL;
-    if (new_playspec->insert_at != -1)
-        frame_in_playspec = new_playspec->start_from;
+    frame_in_playspec = new_playspec->start_from + start_from_offset;
 
     /* Update reference indicators */
     if (old_playspec)
@@ -344,7 +342,13 @@ jack_nframes_t process_input_output_with_buffers(
     if (!is_transport_rolling
             || !state->current_playspec
             || state->current_playspec->num_entries == 0) {
-        frame_in_playspec = apply_pending_playspec_if_needed(state, frame_in_playspec);
+        int start_from_offset = 0;
+        if (state->pending_playspec
+                && frame_in_playspec > state->pending_playspec->insert_at)
+            start_from_offset =
+                frame_in_playspec - state->pending_playspec->insert_at;
+        frame_in_playspec = apply_pending_playspec_if_needed(
+            state, frame_in_playspec, start_from_offset);
         process_messages_on_jack_queue(state, driver, driver_handle);
         return frame_in_playspec;
     }
@@ -352,19 +356,18 @@ jack_nframes_t process_input_output_with_buffers(
     jack_nframes_t frames_copied = 0;
     while (frames_copied < nframes) {
         int frames_to_copy = nframes - frames_copied;
+        int start_from_offset = 0;
 
         /*
          * Check if we'll hit the playspec change in this clip.
          * If yes, limit the number of frames to copy.
          */
         if (state->pending_playspec) {
-            if (state->pending_playspec->insert_at != -1) {
-                if (state->pending_playspec->insert_at - frame_in_playspec
-                        < frames_to_copy)
-                    frames_to_copy =
-                        state->pending_playspec->insert_at - frame_in_playspec;
-            } else {
-                frames_to_copy = 0;  /* insert immediately */
+            frames_to_copy =
+                state->pending_playspec->insert_at - frame_in_playspec;
+            if (frames_to_copy < 0) {
+                start_from_offset = -frames_to_copy;
+                frames_to_copy = 0;
             }
         }
 
@@ -377,7 +380,8 @@ jack_nframes_t process_input_output_with_buffers(
         frames_copied += frames_to_copy;
         frame_in_playspec += frames_to_copy;
 
-        frame_in_playspec = apply_pending_playspec_if_needed(state, frame_in_playspec);
+        frame_in_playspec = apply_pending_playspec_if_needed(
+            state, frame_in_playspec, start_from_offset);
     }
     clamp_jack_port(port_l, port_r, nframes);
 

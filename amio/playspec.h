@@ -45,10 +45,6 @@ struct Playspec
      * Time in frames, counted from the beginning of the previous
      * playspec, at which to insert this playspec. Only read by the JACK
      * thread when swapping playspecs.
-     *
-     * A special value of -1 means to insert immediately and start from
-     * this same position in the new playspec (start_from is ignored
-     * in that case).
      */
     int insert_at;
 
