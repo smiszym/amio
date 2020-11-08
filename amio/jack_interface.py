@@ -24,6 +24,9 @@ class JackInterface(Interface):
         self._pending_logs = ""
 
     def init(self, client_name: str) -> None:
+        if self.jack_interface is not None:
+            raise ValueError(
+                "Attempt to initialize an already initialized AMIO interface")
         self.jack_interface = amio._core.jackio_init(client_name)
         self.message_thread = threading.Thread(
             target=self._process_messages_and_print_logs,
@@ -61,18 +64,28 @@ class JackInterface(Interface):
             logger.debug(line)
 
     def get_frame_rate(self) -> float:
+        if self.jack_interface is None:
+            raise ValueError("Operation on a closed AMIO interface")
         return amio._core.jackio_get_frame_rate(self.jack_interface)
 
     def get_position(self) -> int:
+        if self.jack_interface is None:
+            raise ValueError("Operation on a closed AMIO interface")
         return amio._core.jackio_get_position(self.jack_interface)
 
     def set_position(self, position: int) -> None:
+        if self.jack_interface is None:
+            raise ValueError("Operation on a closed AMIO interface")
         amio._core.jackio_set_position(self.jack_interface, position)
 
     def is_transport_rolling(self) -> bool:
+        if self.jack_interface is None:
+            raise ValueError("Operation on a closed AMIO interface")
         return amio._core.jackio_get_transport_rolling(self.jack_interface) != 0
 
     def set_transport_rolling(self, rolling: bool) -> None:
+        if self.jack_interface is None:
+            raise ValueError("Operation on a closed AMIO interface")
         amio._core.jackio_set_transport_rolling(
             self.jack_interface,
             1 if rolling else 0)
@@ -121,10 +134,10 @@ class JackInterface(Interface):
             self.should_stop = True
         self.message_thread.join()
         amio._core.jackio_close(self.jack_interface)
-        self.jack_interface = None
 
     def is_closed(self) -> bool:
-        return self.jack_interface is None
+        with self.should_stop_lock:
+            return self.should_stop
 
     def _get_next_input_chunk(self) -> Optional[InputAudioChunk]:
         input_chunk = amio._core.jackio_get_input_chunk(self.jack_interface)
