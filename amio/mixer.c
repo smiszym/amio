@@ -9,6 +9,19 @@ void add_clip_data_to_jack_port(
     float gain_l,
     float gain_r)
 {
+    if (pos_a >= pos_b)
+        return;
+
+    if (pos_a < 0) {
+        port_l += (-pos_a);
+        port_r += (-pos_a);
+        pos_a = 0;
+    }
+
+    if (pos_b > clip->length) {
+        pos_b = clip->length;
+    }
+
     if (clip->channels >= 2) {
         for (int n = pos_a * clip->channels;
                  n < pos_b * clip->channels;
