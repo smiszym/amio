@@ -259,6 +259,9 @@ static void mix_playspec_into_jack_ports(
     int frame_in_playspec,
     int frames_to_copy)
 {
+    if (!state->current_playspec)
+        return;
+
     if (frames_to_copy == 0)
         return;
 
@@ -340,9 +343,7 @@ jack_nframes_t process_input_output_with_buffers(
 
     clear_jack_port(port_l, port_r, nframes);
 
-    if (!is_transport_rolling
-            || !state->current_playspec
-            || state->current_playspec->num_entries == 0) {
+    if (!is_transport_rolling) {
         int start_from_offset = 0;
         if (state->pending_playspec
                 && frame_in_playspec > state->pending_playspec->insert_at)
