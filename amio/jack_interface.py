@@ -3,10 +3,14 @@ import amio._core
 from amio.interface import Interface, InputChunkCallback
 from amio.playspec import ImmutablePlayspec, Playspec
 from datetime import datetime
+import logging
 import numpy as np
 import threading
 from time import sleep
 from typing import Optional
+
+
+logger = logging.getLogger('amio')
 
 
 class JackInterface(Interface):
@@ -66,7 +70,7 @@ class JackInterface(Interface):
         lines = self._pending_logs.split('\n')
         self._pending_logs = lines[-1]
         for line in lines[:-1]:
-            print(line)
+            logger.debug(line)
 
     def get_frame_rate(self) -> float:
         return amio._core.jackio_get_frame_rate(self.jack_interface)
