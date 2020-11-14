@@ -30,3 +30,18 @@ void AudioClip_del(
         // TODO handle failure
     }
 }
+
+void io_thread_unref_audio_clip(
+    struct Interface *state, struct DriverInterface *driver,
+    void *driver_handle, union TaskArgument arg)
+{
+    write_log(state, "I/O thread: Got MSG_UNREF_AUDIO_CLIP\n");
+    struct AudioClip *clip = arg.pointer;
+    clip->referenced_by_python = false;
+    if (!clip->referenced_by_current_playspec) {
+        if (!post_task_with_ptr_to_py_thread(
+                state, py_thread_destroy_audio_clip, clip)) {
+            // TODO handle failure
+        }
+    }
+}

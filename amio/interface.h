@@ -54,10 +54,6 @@ void io_init(struct Interface *interface);
 
 void io_close(struct Interface *interface);
 
-void io_thread_unref_audio_clip(
-    struct Interface *state, struct DriverInterface *driver,
-    void *driver_handle, union TaskArgument arg);
-
 void py_thread_destroy_audio_clip(
     struct Interface *interface, union TaskArgument arg);
 
