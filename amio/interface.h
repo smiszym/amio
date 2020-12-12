@@ -7,11 +7,15 @@
 #include "driver.h"
 #include "playspec.h"
 
+#define MAX_INTERFACES 32
+
 /*
  * Data that is tied to every instantiated interface.
  */
 struct Interface
 {
+    int id;
+
     /* Only accessibly from the I/O thread */
     struct Playspec *current_playspec;
     struct Playspec *pending_playspec;
@@ -53,6 +57,8 @@ struct Interface
     struct DriverInterface *driver;
     void *driver_state;
 };
+
+struct Interface * get_interface_by_id(int id);
 
 struct Interface * create_interface(
     struct DriverInterface *driver,

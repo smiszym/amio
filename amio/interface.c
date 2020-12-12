@@ -5,12 +5,32 @@
 
 #include "audio_clip.h"
 #include "mixer.h"
+#include "pool.h"
+
+static struct Pool *pool;
+
+static void ensure_pool_initialized()
+{
+    if (!pool) {
+        pool = malloc(sizeof(struct Pool));
+        pool_create(pool, MAX_INTERFACES);
+    }
+}
+
+struct Interface * get_interface_by_id(int id)
+{
+    ensure_pool_initialized();
+    return pool_find(pool, id);
+}
 
 struct Interface * create_interface(
     struct DriverInterface *driver,
     const char *client_name)
 {
+    ensure_pool_initialized();
+
     struct Interface *interface = malloc(sizeof(struct Interface));
+    interface->id = pool_put(pool, interface);
     interface->driver = driver;
     interface->driver_state = driver->create_state_object(
         client_name, interface);
