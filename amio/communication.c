@@ -43,7 +43,7 @@ bool write_log(struct Interface *state, char *s)
     return PaUtil_WriteRingBuffer(&state->log_queue, s, len) == len;
 }
 
-void io_get_logs(struct Interface *interface, char *bytearray, int n)
+void iface_get_logs(struct Interface *interface, char *bytearray, int n)
 {
     /* Runs on the Python thread */
 
@@ -63,7 +63,7 @@ bool write_input_samples(
         &interface->input_chunk_queue, input_chunk, 1) == 1;
 }
 
-struct InputChunk * io_get_input_chunk(struct Interface *interface)
+struct InputChunk * iface_get_input_chunk(struct Interface *interface)
 {
     /* Runs on the Python thread */
 

@@ -79,20 +79,20 @@ static void jack_shutdown(void *arg)
     exit(1);
 }
 
-void jackio_process_messages_on_python_queue(
+void jack_iface_process_messages_on_python_queue(
     struct JackInterface *jack_interface)
 {
-    io_process_messages_on_python_queue(&jack_interface->interface);
+    iface_process_messages_on_python_queue(&jack_interface->interface);
 }
 
-struct JackInterface * jackio_init(const char *client_name)
+struct JackInterface * jack_iface_init(const char *client_name)
 {
     /* Runs on the Python thread */
 
     struct JackInterface *jack_interface = malloc(sizeof(
                                                      struct JackInterface));
 
-    io_init(&jack_interface->interface);
+    iface_init(&jack_interface->interface);
 
     const char **ports;
     jack_options_t options = JackNullOption;
@@ -228,52 +228,52 @@ struct JackInterface * jackio_init(const char *client_name)
     return jack_interface;
 }
 
-void jackio_close(struct JackInterface *jack_interface)
+void jack_iface_close(struct JackInterface *jack_interface)
 {
     /* Runs on the Python thread */
 
     jack_client_close(jack_interface->client);
-    io_close(&jack_interface->interface);
+    iface_close(&jack_interface->interface);
     free(jack_interface);
 }
 
-void jackio_get_logs(
+void jack_iface_get_logs(
     struct JackInterface *jack_interface, char *bytearray, int n)
 {
-    io_get_logs(&jack_interface->interface, bytearray, n);
+    iface_get_logs(&jack_interface->interface, bytearray, n);
 }
 
-void jackio_set_playspec(struct JackInterface *jack_interface)
+void jack_iface_set_playspec(struct JackInterface *jack_interface)
 {
-    io_set_playspec(&jack_interface->interface);
+    iface_set_playspec(&jack_interface->interface);
 }
 
-int jackio_get_frame_rate(struct JackInterface *jack_interface)
+int jack_iface_get_frame_rate(struct JackInterface *jack_interface)
 {
-    return io_get_frame_rate(&jack_interface->interface);
+    return iface_get_frame_rate(&jack_interface->interface);
 }
 
-int jackio_get_position(struct JackInterface *jack_interface)
+int jack_iface_get_position(struct JackInterface *jack_interface)
 {
-    return io_get_position(&jack_interface->interface);
+    return iface_get_position(&jack_interface->interface);
 }
 
-void jackio_set_position(struct JackInterface *jack_interface, int position)
+void jack_iface_set_position(struct JackInterface *jack_interface, int position)
 {
-    io_set_position(&jack_interface->interface, position);
+    iface_set_position(&jack_interface->interface, position);
 }
 
-int jackio_get_transport_rolling(struct JackInterface *jack_interface)
+int jack_iface_get_transport_rolling(struct JackInterface *jack_interface)
 {
-    return io_get_transport_rolling(&jack_interface->interface);
+    return iface_get_transport_rolling(&jack_interface->interface);
 }
 
-void jackio_set_transport_rolling(struct JackInterface *jack_interface, int rolling)
+void jack_iface_set_transport_rolling(struct JackInterface *jack_interface, int rolling)
 {
-    io_set_transport_rolling(&jack_interface->interface, rolling);
+    iface_set_transport_rolling(&jack_interface->interface, rolling);
 }
 
-struct InputChunk * jackio_get_input_chunk(struct JackInterface *jack_interface)
+struct InputChunk * jack_iface_get_input_chunk(struct JackInterface *jack_interface)
 {
-    return io_get_input_chunk(&jack_interface->interface);
+    return iface_get_input_chunk(&jack_interface->interface);
 }

@@ -5,7 +5,7 @@
 #include "audio_clip.h"
 #include "mixer.h"
 
-void io_init(struct Interface *interface)
+void iface_init(struct Interface *interface)
 {
     interface->python_thread_queue_buffer = malloc(
         THREAD_QUEUE_SIZE * sizeof(struct Task));
@@ -44,7 +44,7 @@ void io_init(struct Interface *interface)
     interface->last_reported_position = -1;
 }
 
-void io_close(struct Interface *interface)
+void iface_close(struct Interface *interface)
 {
     free(interface->input_chunk_queue_buffer);
     free(interface->log_queue_buffer);
@@ -204,7 +204,7 @@ void py_thread_receive_transport_state(
     interface->last_reported_is_transport_rolling = arg.integer;
 }
 
-void io_process_messages_on_python_queue(struct Interface *interface)
+void iface_process_messages_on_python_queue(struct Interface *interface)
 {
     /* Runs on the Python thread */
 
@@ -392,7 +392,7 @@ jack_nframes_t process_input_output_with_buffers(
     return frame_in_playspec;
 }
 
-void io_set_playspec(struct Interface *interface)
+void iface_set_playspec(struct Interface *interface)
 {
     /* Runs on the Python thread */
 
@@ -403,35 +403,35 @@ void io_set_playspec(struct Interface *interface)
     playspec_being_built = NULL;
 }
 
-int io_get_frame_rate(struct Interface *interface)
+int iface_get_frame_rate(struct Interface *interface)
 {
     /* Runs on the Python thread */
 
     return interface->last_reported_frame_rate;
 }
 
-int io_get_position(struct Interface *interface)
+int iface_get_position(struct Interface *interface)
 {
     /* Runs on the Python thread */
 
     return interface->last_reported_position;
 }
 
-void io_set_position(struct Interface *interface, int position)
+void iface_set_position(struct Interface *interface, int position)
 {
     /* Runs on the Python thread */
 
     post_task_with_int_to_io_thread(interface, io_thread_set_pos, position);
 }
 
-int io_get_transport_rolling(struct Interface *interface)
+int iface_get_transport_rolling(struct Interface *interface)
 {
     /* Runs on the Python thread */
 
     return interface->last_reported_is_transport_rolling;
 }
 
-void io_set_transport_rolling(struct Interface *interface, int rolling)
+void iface_set_transport_rolling(struct Interface *interface, int rolling)
 {
     /* Runs on the Python thread */
 

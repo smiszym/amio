@@ -36,18 +36,18 @@ void set_entry_in_playspec(
 
 /* JackInterface interface */
 
-void jackio_process_messages_on_python_queue(
+void jack_iface_process_messages_on_python_queue(
     struct JackInterface *jack_interface);
-struct JackInterface * jackio_init(const char *client_name);
-void jackio_get_logs(struct JackInterface *jack_interface, char *bytearray, int n);
-void jackio_set_playspec(struct JackInterface *interface);
-int jackio_get_frame_rate(struct JackInterface *interface);
-int jackio_get_position(struct JackInterface *interface);
-void jackio_set_position(struct JackInterface *interface, int position);
-int jackio_get_transport_rolling(struct JackInterface *interface);
-void jackio_set_transport_rolling(struct JackInterface *interface, int rolling);
-struct InputChunk * jackio_get_input_chunk(struct JackInterface *jack_interface);
-void jackio_close(struct JackInterface *jack_interface);
+struct JackInterface * jack_iface_init(const char *client_name);
+void jack_iface_get_logs(struct JackInterface *jack_interface, char *bytearray, int n);
+void jack_iface_set_playspec(struct JackInterface *interface);
+int jack_iface_get_frame_rate(struct JackInterface *interface);
+int jack_iface_get_position(struct JackInterface *interface);
+void jack_iface_set_position(struct JackInterface *interface, int position);
+int jack_iface_get_transport_rolling(struct JackInterface *interface);
+void jack_iface_set_transport_rolling(struct JackInterface *interface, int rolling);
+struct InputChunk * jack_iface_get_input_chunk(struct JackInterface *jack_interface);
+void jack_iface_close(struct JackInterface *jack_interface);
 %}
 
 /* AudioClip interface */
@@ -76,15 +76,15 @@ void set_entry_in_playspec(
 
 /* JackInterface interface */
 
-void jackio_process_messages_on_python_queue(
+void jack_iface_process_messages_on_python_queue(
     struct JackInterface *jack_interface);
-struct JackInterface * jackio_init(const char *client_name);
-void jackio_get_logs(struct JackInterface *jack_interface, char *bytearray, int n);
-void jackio_set_playspec(struct JackInterface *interface);
-int jackio_get_frame_rate(struct JackInterface *interface);
-int jackio_get_position(struct JackInterface *interface);
-void jackio_set_position(struct JackInterface *interface, int position);
-int jackio_get_transport_rolling(struct JackInterface *interface);
-void jackio_set_transport_rolling(struct JackInterface *interface, int rolling);
-struct InputChunk * jackio_get_input_chunk(struct JackInterface *jack_interface);
-void jackio_close(struct JackInterface *jack_interface);
+struct JackInterface * jack_iface_init(const char *client_name);
+void jack_iface_get_logs(struct JackInterface *jack_interface, char *bytearray, int n);
+void jack_iface_set_playspec(struct JackInterface *interface);
+int jack_iface_get_frame_rate(struct JackInterface *interface);
+int jack_iface_get_position(struct JackInterface *interface);
+void jack_iface_set_position(struct JackInterface *interface, int position);
+int jack_iface_get_transport_rolling(struct JackInterface *interface);
+void jack_iface_set_transport_rolling(struct JackInterface *interface, int rolling);
+struct InputChunk * jack_iface_get_input_chunk(struct JackInterface *jack_interface);
+void jack_iface_close(struct JackInterface *jack_interface);
