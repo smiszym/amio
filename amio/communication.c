@@ -43,9 +43,11 @@ bool write_log(struct Interface *state, char *s)
     return PaUtil_WriteRingBuffer(&state->log_queue, s, len) == len;
 }
 
-void iface_get_logs(struct Interface *interface, char *bytearray, int n)
+void iface_get_logs(int interface_id, char *bytearray, int n)
 {
     /* Runs on the Python thread */
+
+    struct Interface *interface = get_interface_by_id(interface_id);
 
     char buf[LOG_QUEUE_SIZE];
     int to_read = LOG_QUEUE_SIZE < (n-1) ? LOG_QUEUE_SIZE : (n-1);
@@ -63,9 +65,11 @@ bool write_input_samples(
         &interface->input_chunk_queue, input_chunk, 1) == 1;
 }
 
-struct InputChunk * iface_get_input_chunk(struct Interface *interface)
+struct InputChunk * iface_get_input_chunk(int interface_id)
 {
     /* Runs on the Python thread */
+
+    struct Interface *interface = get_interface_by_id(interface_id);
 
     struct InputChunk *clip = malloc(sizeof(struct InputChunk));
     if (PaUtil_ReadRingBuffer(&interface->input_chunk_queue, clip, 1) == 1) {

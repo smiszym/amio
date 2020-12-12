@@ -2,7 +2,8 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include "communication.h"
+
+#include "interface.h"
 
 struct AudioClip * AudioClip_init(
     char *bytes, int n, int channels, float framerate)
@@ -20,12 +21,12 @@ struct AudioClip * AudioClip_init(
     return result;
 }
 
-void AudioClip_del(struct Interface *interface, struct AudioClip *clip)
+void AudioClip_del(int interface, struct AudioClip *clip)
 {
     /* Runs on the Python thread */
 
     if (!post_task_with_ptr_to_io_thread(
-            interface, io_thread_unref_audio_clip, clip)) {
+            get_interface_by_id(interface), io_thread_unref_audio_clip, clip)) {
         // TODO handle failure
     }
 }

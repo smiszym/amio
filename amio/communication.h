@@ -53,10 +53,10 @@ bool post_task_with_int_to_py_thread(
 bool post_task_with_int_to_io_thread(
     struct Interface *interface, IoThreadCallable callable, int arg_int);
 bool write_log(struct Interface *state, char *s);
-void iface_get_logs(struct Interface *interface, char *bytearray, int n);
+void iface_get_logs(int interface_id, char *bytearray, int n);
 
 bool write_input_samples(
     struct Interface *interface, struct InputChunk *input_chunk);
-struct InputChunk * iface_get_input_chunk(struct Interface *interface);
+struct InputChunk * iface_get_input_chunk(int interface_id);
 
 #endif

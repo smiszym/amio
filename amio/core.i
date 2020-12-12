@@ -11,14 +11,12 @@
 
 struct AudioClip;
 struct InputChunk;
-struct Interface;
 
 /* AudioClip */
 
 struct AudioClip * AudioClip_init(
     char *bytes, int n, int channels, float framerate);
-void AudioClip_del(
-    struct Interface *interface, struct AudioClip *clip);
+void AudioClip_del(int interface, struct AudioClip *clip);
 
 /* InputChunk */
 
@@ -39,21 +37,20 @@ void set_entry_in_playspec(
 
 /* Interface */
 
-void iface_process_messages_on_python_queue(
-    struct Interface *jack_interface);
-void iface_get_logs(struct Interface *jack_interface, char *bytearray, int n);
-void iface_set_playspec(struct Interface *interface);
-int iface_get_frame_rate(struct Interface *interface);
-int iface_get_position(struct Interface *interface);
-void iface_set_position(struct Interface *interface, int position);
-int iface_get_transport_rolling(struct Interface *interface);
-void iface_set_transport_rolling(struct Interface *interface, int rolling);
-struct InputChunk * iface_get_input_chunk(struct Interface *jack_interface);
-void iface_close(struct Interface *jack_interface);
+void iface_process_messages_on_python_queue(int interface_id);
+void iface_get_logs(int interface_id, char *bytearray, int n);
+void iface_set_playspec(int interface_id);
+int iface_get_frame_rate(int interface_id);
+int iface_get_position(int interface_id);
+void iface_set_position(int interface_id, int position);
+int iface_get_transport_rolling(int interface_id);
+void iface_set_transport_rolling(int interface_id, int rolling);
+struct InputChunk * iface_get_input_chunk(int interface_id);
+void iface_close(int interface_id);
 
 /* drivers */
 
-struct Interface * create_jack_interface(const char *client_name);
+int create_jack_interface(const char *client_name);
 
 %}
 
@@ -61,8 +58,7 @@ struct Interface * create_jack_interface(const char *client_name);
 
 struct AudioClip * AudioClip_init(
     char *bytes, int n, int channels, float framerate);
-void AudioClip_del(
-    struct Interface *interface, struct AudioClip *clip);
+void AudioClip_del(int interface, struct AudioClip *clip);
 
 /* InputChunk */
 
@@ -83,18 +79,17 @@ void set_entry_in_playspec(
 
 /* Interface */
 
-void iface_process_messages_on_python_queue(
-    struct Interface *jack_interface);
-void iface_get_logs(struct Interface *jack_interface, char *bytearray, int n);
-void iface_set_playspec(struct Interface *interface);
-int iface_get_frame_rate(struct Interface *interface);
-int iface_get_position(struct Interface *interface);
-void iface_set_position(struct Interface *interface, int position);
-int iface_get_transport_rolling(struct Interface *interface);
-void iface_set_transport_rolling(struct Interface *interface, int rolling);
-struct InputChunk * iface_get_input_chunk(struct Interface *jack_interface);
-void iface_close(struct Interface *jack_interface);
+void iface_process_messages_on_python_queue(int interface_id);
+void iface_get_logs(int interface_id, char *bytearray, int n);
+void iface_set_playspec(int interface_id);
+int iface_get_frame_rate(int interface_id);
+int iface_get_position(int interface_id);
+void iface_set_position(int interface_id, int position);
+int iface_get_transport_rolling(int interface_id);
+void iface_set_transport_rolling(int interface_id, int rolling);
+struct InputChunk * iface_get_input_chunk(int interface_id);
+void iface_close(int interface_id);
 
 /* drivers */
 
-struct Interface * create_jack_interface(const char *client_name);
+int create_jack_interface(const char *client_name);

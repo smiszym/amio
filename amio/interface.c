@@ -23,9 +23,7 @@ struct Interface * get_interface_by_id(int id)
     return pool_find(pool, id);
 }
 
-struct Interface * create_interface(
-    struct DriverInterface *driver,
-    const char *client_name)
+int create_interface(struct DriverInterface *driver, const char *client_name)
 {
     ensure_pool_initialized();
 
@@ -36,7 +34,7 @@ struct Interface * create_interface(
         client_name, interface);
     iface_init(interface, driver, interface->driver_state);
     driver->init(interface->driver_state);
-    return interface;
+    return interface->id;
 }
 
 void iface_init(
@@ -84,8 +82,10 @@ void iface_init(
     interface->driver_state = driver_state;
 }
 
-void iface_close(struct Interface *interface)
+void iface_close(int interface_id)
 {
+    struct Interface *interface = get_interface_by_id(interface_id);
+
     interface->driver->destroy(interface->driver_state);
     free(interface->input_chunk_queue_buffer);
     free(interface->log_queue_buffer);
@@ -245,9 +245,11 @@ void py_thread_receive_transport_state(
     interface->last_reported_is_transport_rolling = arg.integer;
 }
 
-void iface_process_messages_on_python_queue(struct Interface *interface)
+void iface_process_messages_on_python_queue(int interface_id)
 {
     /* Runs on the Python thread */
+
+    struct Interface *interface = get_interface_by_id(interface_id);
 
     struct Task message;
     while (PaUtil_ReadRingBuffer(
@@ -434,9 +436,11 @@ jack_nframes_t process_input_output_with_buffers(
     return frame_in_playspec;
 }
 
-void iface_set_playspec(struct Interface *interface)
+void iface_set_playspec(int interface_id)
 {
     /* Runs on the Python thread */
+
+    struct Interface *interface = get_interface_by_id(interface_id);
 
     if (!post_task_with_ptr_to_io_thread(
             interface, io_thread_set_playspec, playspec_being_built)) {
@@ -445,38 +449,43 @@ void iface_set_playspec(struct Interface *interface)
     playspec_being_built = NULL;
 }
 
-int iface_get_frame_rate(struct Interface *interface)
+int iface_get_frame_rate(int interface_id)
 {
     /* Runs on the Python thread */
 
+    struct Interface *interface = get_interface_by_id(interface_id);
     return interface->last_reported_frame_rate;
 }
 
-int iface_get_position(struct Interface *interface)
+int iface_get_position(int interface_id)
 {
     /* Runs on the Python thread */
 
+    struct Interface *interface = get_interface_by_id(interface_id);
     return interface->last_reported_position;
 }
 
-void iface_set_position(struct Interface *interface, int position)
+void iface_set_position(int interface_id, int position)
 {
     /* Runs on the Python thread */
 
+    struct Interface *interface = get_interface_by_id(interface_id);
     post_task_with_int_to_io_thread(interface, io_thread_set_pos, position);
 }
 
-int iface_get_transport_rolling(struct Interface *interface)
+int iface_get_transport_rolling(int interface_id)
 {
     /* Runs on the Python thread */
 
+    struct Interface *interface = get_interface_by_id(interface_id);
     return interface->last_reported_is_transport_rolling;
 }
 
-void iface_set_transport_rolling(struct Interface *interface, int rolling)
+void iface_set_transport_rolling(int interface_id, int rolling)
 {
     /* Runs on the Python thread */
 
+    struct Interface *interface = get_interface_by_id(interface_id);
     post_task_with_int_to_io_thread(
         interface, io_thread_set_transport_state, rolling);
 }

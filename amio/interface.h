@@ -60,16 +60,14 @@ struct Interface
 
 struct Interface * get_interface_by_id(int id);
 
-struct Interface * create_interface(
-    struct DriverInterface *driver,
-    const char *client_name);
+int create_interface(struct DriverInterface *driver, const char *client_name);
 
 void iface_init(
     struct Interface *interface,
     struct DriverInterface *driver,
     void *driver_state);
 
-void iface_close(struct Interface *interface);
+void iface_close(int interface_id);
 
 void py_thread_destroy_audio_clip(
     struct Interface *interface, union TaskArgument arg);
@@ -86,7 +84,7 @@ void py_thread_receive_current_pos(
 void py_thread_receive_transport_state(
     struct Interface *interface, union TaskArgument arg);
 
-void iface_process_messages_on_python_queue(struct Interface *interface);
+void iface_process_messages_on_python_queue(int interface_id);
 
 void process_input_with_buffers(
     struct Interface *interface,
@@ -104,11 +102,11 @@ jack_nframes_t process_input_output_with_buffers(
     jack_default_audio_sample_t *port_l,
     jack_default_audio_sample_t *port_r);
 
-void iface_set_playspec(struct Interface *interface);
-int iface_get_frame_rate(struct Interface *interface);
-int iface_get_position(struct Interface *interface);
-void iface_set_position(struct Interface *interface, int position);
-int iface_get_transport_rolling(struct Interface *interface);
-void iface_set_transport_rolling(struct Interface *interface, int rolling);
+void iface_set_playspec(int interface_id);
+int iface_get_frame_rate(int interface_id);
+int iface_get_position(int interface_id);
+void iface_set_position(int interface_id, int position);
+int iface_get_transport_rolling(int interface_id);
+void iface_set_transport_rolling(int interface_id, int rolling);
 
 #endif

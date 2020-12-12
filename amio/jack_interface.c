@@ -83,7 +83,7 @@ static struct DriverInterface jack_driver = {
     .set_is_transport_rolling = jack_set_is_transport_rolling,
 };
 
-struct Interface * create_jack_interface(const char *client_name)
+int create_jack_interface(const char *client_name)
 {
     return create_interface(&jack_driver, client_name);
 }
