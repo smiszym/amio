@@ -13,7 +13,7 @@
 #include "interface.h"
 #include "playspec.h"
 
-struct JackInterface
+struct JackDriverState
 {
     struct Interface *interface;
 
@@ -36,7 +36,7 @@ static void jack_iface_init(void *state);
 static void * jack_create_state_object(
     const char *client_name, struct Interface *interface)
 {
-    struct JackInterface *state = malloc(sizeof(struct JackInterface));
+    struct JackDriverState *state = malloc(sizeof(struct JackDriverState));
 
     state->interface = interface;
 
@@ -56,7 +56,7 @@ static void * jack_create_state_object(
 
 static void jack_destroy(void *state)
 {
-    struct JackInterface *jack_interface = state;
+    struct JackDriverState *jack_interface = state;
     jack_client_close(jack_interface->client);
     free(jack_interface);
 }
@@ -64,14 +64,14 @@ static void jack_destroy(void *state)
 static void jack_set_position(void *handle, int position)
 {
     /* Runs on the I/O thread */
-    struct JackInterface *client = handle;
+    struct JackDriverState *client = handle;
     client->frame_in_playspec = position;
 }
 
 static void jack_set_is_transport_rolling(void *handle, bool value)
 {
     /* Runs on the I/O thread */
-    struct JackInterface *client = handle;
+    struct JackDriverState *client = handle;
     client->is_transport_rolling = value;
 }
 
@@ -79,40 +79,40 @@ static int process(jack_nframes_t nframes, void *arg)
 {
     /* Runs on the I/O thread */
 
-    struct JackInterface *amio_jack_client = arg;
+    struct JackDriverState *state = arg;
 
     jack_default_audio_sample_t *in_buffer_l, *in_buffer_r;
     jack_default_audio_sample_t *out_buffer_l, *out_buffer_r;
 
     in_buffer_l = (jack_default_audio_sample_t*)jack_port_get_buffer(
-        amio_jack_client->input_port_l, nframes);
+        state->input_port_l, nframes);
     in_buffer_r = (jack_default_audio_sample_t*)jack_port_get_buffer(
-        amio_jack_client->input_port_r, nframes);
+        state->input_port_r, nframes);
 
     process_input_with_buffers(
-        amio_jack_client->interface,
+        state->interface,
         nframes,
         in_buffer_l,
         in_buffer_r,
-        amio_jack_client->frame_in_playspec - amio_jack_client->total_latency,
-        amio_jack_client->is_transport_rolling);
+        state->frame_in_playspec - state->total_latency,
+        state->is_transport_rolling);
 
     out_buffer_l = (jack_default_audio_sample_t*)jack_port_get_buffer(
-        amio_jack_client->output_port_l, nframes);
+        state->output_port_l, nframes);
     out_buffer_r = (jack_default_audio_sample_t*)jack_port_get_buffer(
-        amio_jack_client->output_port_r, nframes);
+        state->output_port_r, nframes);
 
-    int old_frame = amio_jack_client->frame_in_playspec;
+    int old_frame = state->frame_in_playspec;
 
     int new_frame = process_input_output_with_buffers(
-        amio_jack_client->interface,
-        amio_jack_client->frame_in_playspec,
-        amio_jack_client->is_transport_rolling,
+        state->interface,
+        state->frame_in_playspec,
+        state->is_transport_rolling,
         nframes, out_buffer_l, out_buffer_r);
 
     /* Only advance the current position if it wasn't changed from Python. */
-    if (amio_jack_client->frame_in_playspec == old_frame)
-        amio_jack_client->frame_in_playspec = new_frame;
+    if (state->frame_in_playspec == old_frame)
+        state->frame_in_playspec = new_frame;
 
     return 0;
 }
@@ -127,7 +127,7 @@ static void jack_iface_init(void *state)
 {
     /* Runs on the Python thread */
 
-    struct JackInterface *jack_interface = state;
+    struct JackDriverState *jack_interface = state;
 
     const char **ports;
     jack_options_t options = JackNullOption;
