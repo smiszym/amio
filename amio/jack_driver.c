@@ -1,4 +1,4 @@
-#include "jack_interface.h"
+#include "jack_driver.h"
 
 #include <jack/jack.h>
 #include <stdbool.h>

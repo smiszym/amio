@@ -29,7 +29,7 @@ core_module = Extension(
         "amio/communication.c",
         "amio/input_chunk.c",
         "amio/interface.c",
-        "amio/jack_interface.c",
+        "amio/jack_driver.c",
         "amio/mixer.c",
         "amio/playspec.c",
         "amio/pool.c",

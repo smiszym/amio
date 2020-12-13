@@ -7,7 +7,7 @@
 #include "mixer.h"
 #include "pool.h"
 
-#include "jack_interface.h"
+#include "jack_driver.h"
 
 static struct Pool *pool;
 
