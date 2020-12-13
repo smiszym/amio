@@ -13,6 +13,8 @@ static struct Pool *pool;
 
 static void ensure_pool_initialized()
 {
+    /* Runs on the Python thread */
+
     if (!pool) {
         pool = malloc(sizeof(struct Pool));
         pool_create(pool, MAX_INTERFACES);
@@ -21,12 +23,16 @@ static void ensure_pool_initialized()
 
 struct Interface * get_interface_by_id(int id)
 {
+    /* Runs on the Python thread */
+
     ensure_pool_initialized();
     return pool_find(pool, id);
 }
 
 int create_interface(struct Driver *driver, const char *client_name)
 {
+    /* Runs on the Python thread */
+
     ensure_pool_initialized();
 
     struct Interface *interface = malloc(sizeof(struct Interface));
@@ -41,6 +47,8 @@ int create_interface(struct Driver *driver, const char *client_name)
 
 int create_jack_interface(const char *client_name)
 {
+    /* Runs on the Python thread */
+
     return create_interface(&jack_driver, client_name);
 }
 
@@ -49,6 +57,8 @@ void iface_init(
     struct Driver *driver,
     void *driver_state)
 {
+    /* Runs on the Python thread */
+
     interface->python_thread_queue_buffer = malloc(
         THREAD_QUEUE_SIZE * sizeof(struct Task));
     interface->io_thread_queue_buffer = malloc(
@@ -91,6 +101,8 @@ void iface_init(
 
 void iface_close(int interface_id)
 {
+    /* Runs on the Python thread */
+
     struct Interface *interface = get_interface_by_id(interface_id);
 
     interface->driver->destroy(interface->driver_state);
@@ -105,6 +117,8 @@ static int apply_pending_playspec_if_needed(
     int frame_in_playspec,
     int start_from_offset)
 {
+    /* Runs on the I/O thread */
+
     struct Playspec *old_playspec = state->current_playspec;
     struct Playspec *new_playspec = state->pending_playspec;
 
@@ -184,6 +198,8 @@ static void io_thread_set_playspec(
     struct Interface *state, struct Driver *driver,
     void *driver_handle, union TaskArgument arg)
 {
+    /* Runs on the I/O thread */
+
     write_log(state, "I/O thread: Got MSG_SET_PLAYSPEC\n");
     state->pending_playspec = arg.pointer;
 }
@@ -192,6 +208,8 @@ static void io_thread_set_pos(
     struct Interface *state, struct Driver *driver,
     void *driver_handle, union TaskArgument arg)
 {
+    /* Runs on the I/O thread */
+
     write_log(state, "I/O thread: Got MSG_SET_POS\n");
     driver->set_position(driver_handle, arg.integer);
 }
@@ -200,6 +218,8 @@ static void io_thread_set_transport_state(
     struct Interface *state, struct Driver *driver,
     void *driver_handle, union TaskArgument arg)
 {
+    /* Runs on the I/O thread */
+
     write_log(state, "I/O thread: Got MSG_SET_TRANSPORT_STATE\n");
     driver->set_is_transport_rolling(driver_handle, arg.integer);
 }
@@ -229,6 +249,8 @@ void py_thread_destroy_audio_clip(
 void py_thread_destroy_playspec(
     struct Interface *interface, union TaskArgument arg)
 {
+    /* Runs on the Python thread */
+
     struct Playspec *playspec = arg.pointer;
     free(playspec->entries);
     free(playspec);
@@ -237,18 +259,24 @@ void py_thread_destroy_playspec(
 void py_thread_receive_frame_rate(
     struct Interface *interface, union TaskArgument arg)
 {
+    /* Runs on the Python thread */
+
     interface->last_reported_frame_rate = arg.integer;
 }
 
 void py_thread_receive_current_pos(
     struct Interface *interface, union TaskArgument arg)
 {
+    /* Runs on the Python thread */
+
     interface->last_reported_position = arg.integer;
 }
 
 void py_thread_receive_transport_state(
     struct Interface *interface, union TaskArgument arg)
 {
+    /* Runs on the Python thread */
+
     interface->last_reported_is_transport_rolling = arg.integer;
 }
 
@@ -273,6 +301,8 @@ static void mix_playspec_entry_into_jack_ports_at(
     int frame_in_playspec,
     int frames_to_copy)
 {
+    /* Runs on the I/O thread */
+
     int a_in_clip = entry->clip_frame_a;
     int b_in_clip = entry->clip_frame_b;
 
@@ -309,6 +339,8 @@ static void mix_playspec_into_jack_ports(
     int frame_in_playspec,
     int frames_to_copy)
 {
+    /* Runs on the I/O thread */
+
     if (!state->current_playspec)
         return;
 
@@ -360,6 +392,8 @@ void process_input_with_buffers(
     int starting_frame,
     int transport_state)
 {
+    /* Runs on the I/O thread */
+
     struct InputChunk clip;
     jack_nframes_t clip_i;
     jack_nframes_t buffer_i = 0;
