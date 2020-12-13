@@ -50,7 +50,7 @@ struct AudioClip * AudioClip_init(
 void AudioClip_del(int interface, struct AudioClip *clip);
 
 void io_thread_unref_audio_clip(
-    struct Interface *state, struct DriverInterface *driver,
+    struct Interface *state, struct Driver *driver,
     void *driver_handle, union TaskArgument arg);
 
 #endif

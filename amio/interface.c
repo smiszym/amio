@@ -25,7 +25,7 @@ struct Interface * get_interface_by_id(int id)
     return pool_find(pool, id);
 }
 
-int create_interface(struct DriverInterface *driver, const char *client_name)
+int create_interface(struct Driver *driver, const char *client_name)
 {
     ensure_pool_initialized();
 
@@ -46,7 +46,7 @@ int create_jack_interface(const char *client_name)
 
 void iface_init(
     struct Interface *interface,
-    struct DriverInterface *driver,
+    struct Driver *driver,
     void *driver_state)
 {
     interface->python_thread_queue_buffer = malloc(
@@ -181,7 +181,7 @@ static int apply_pending_playspec_if_needed(
 }
 
 static void io_thread_set_playspec(
-    struct Interface *state, struct DriverInterface *driver,
+    struct Interface *state, struct Driver *driver,
     void *driver_handle, union TaskArgument arg)
 {
     write_log(state, "I/O thread: Got MSG_SET_PLAYSPEC\n");
@@ -189,7 +189,7 @@ static void io_thread_set_playspec(
 }
 
 static void io_thread_set_pos(
-    struct Interface *state, struct DriverInterface *driver,
+    struct Interface *state, struct Driver *driver,
     void *driver_handle, union TaskArgument arg)
 {
     write_log(state, "I/O thread: Got MSG_SET_POS\n");
@@ -197,7 +197,7 @@ static void io_thread_set_pos(
 }
 
 static void io_thread_set_transport_state(
-    struct Interface *state, struct DriverInterface *driver,
+    struct Interface *state, struct Driver *driver,
     void *driver_handle, union TaskArgument arg)
 {
     write_log(state, "I/O thread: Got MSG_SET_TRANSPORT_STATE\n");
@@ -206,7 +206,7 @@ static void io_thread_set_transport_state(
 
 static void process_messages_on_jack_queue(
     struct Interface *state,
-    struct DriverInterface *driver,
+    struct Driver *driver,
     void *driver_handle)
 {
     /* Runs on the I/O thread */

@@ -263,7 +263,7 @@ static void jack_iface_init(void *state)
     jack_interface->total_latency = capture_latency.min + playback_latency.min;
 }
 
-struct DriverInterface jack_driver = {
+struct Driver jack_driver = {
     .create_state_object = jack_create_state_object,
     .init = jack_iface_init,
     .destroy = jack_destroy,

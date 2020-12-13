@@ -3,7 +3,7 @@
 
 struct Interface;
 
-struct DriverInterface
+struct Driver
 {
     void * (*create_state_object)(
         const char *client_name, struct Interface *interface);

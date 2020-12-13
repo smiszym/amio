@@ -19,7 +19,7 @@ union TaskArgument
 
 typedef void (*IoThreadCallable)(
     struct Interface *state,
-    struct DriverInterface *driver,
+    struct Driver *driver,
     void *driver_handle,
     union TaskArgument arg);
 

@@ -54,19 +54,19 @@ struct Interface
     struct InputChunk *input_chunk_queue_buffer;
 
     /* Driver talks to audio system such as ALSA, PulseAudio, JACK */
-    struct DriverInterface *driver;
+    struct Driver *driver;
     void *driver_state;
 };
 
 struct Interface * get_interface_by_id(int id);
 
-int create_interface(struct DriverInterface *driver, const char *client_name);
+int create_interface(struct Driver *driver, const char *client_name);
 
 int create_jack_interface(const char *client_name);
 
 void iface_init(
     struct Interface *interface,
-    struct DriverInterface *driver,
+    struct Driver *driver,
     void *driver_state);
 
 void iface_close(int interface_id);
