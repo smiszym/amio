@@ -61,7 +61,7 @@ struct Playspec
     bool referenced_by_native_code;
 };
 
-extern struct Playspec *playspec_being_built;
+/* API for Python code */
 
 bool begin_defining_playspec(int size, int insert_at, int start_from);
 void set_entry_in_playspec(
@@ -70,5 +70,9 @@ void set_entry_in_playspec(
     int clip_frame_a, int clip_frame_b,
     int play_at_frame, int repeat_interval,
     float gain_l, float gain_r);
+
+/* API for C code */
+
+struct Playspec * get_built_playspec();
 
 #endif

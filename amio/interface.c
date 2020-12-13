@@ -450,10 +450,9 @@ void iface_set_playspec(int interface_id)
     struct Interface *interface = get_interface_by_id(interface_id);
 
     if (!post_task_with_ptr_to_io_thread(
-            interface, io_thread_set_playspec, playspec_being_built)) {
+            interface, io_thread_set_playspec, get_built_playspec())) {
         // TODO handle failure
     }
-    playspec_being_built = NULL;
 }
 
 int iface_get_frame_rate(int interface_id)

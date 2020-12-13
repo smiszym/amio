@@ -3,7 +3,7 @@
 #include "stddef.h"
 #include <stdlib.h>
 
-struct Playspec *playspec_being_built = NULL;
+static struct Playspec *playspec_being_built = NULL;
 
 bool begin_defining_playspec(int size, int insert_at, int start_from)
 {
@@ -51,4 +51,11 @@ void set_entry_in_playspec(
     playspec_being_built->entries[n].repeat_interval = repeat_interval;
     playspec_being_built->entries[n].gain_l = gain_l;
     playspec_being_built->entries[n].gain_r = gain_r;
+}
+
+struct Playspec * get_built_playspec()
+{
+    struct Playspec *result = playspec_being_built;
+    playspec_being_built = NULL;
+    return result;
 }
