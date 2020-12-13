@@ -62,6 +62,8 @@ struct Interface * get_interface_by_id(int id);
 
 int create_interface(struct DriverInterface *driver, const char *client_name);
 
+int create_jack_interface(const char *client_name);
+
 void iface_init(
     struct Interface *interface,
     struct DriverInterface *driver,

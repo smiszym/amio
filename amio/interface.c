@@ -7,6 +7,8 @@
 #include "mixer.h"
 #include "pool.h"
 
+#include "jack_interface.h"
+
 static struct Pool *pool;
 
 static void ensure_pool_initialized()
@@ -35,6 +37,11 @@ int create_interface(struct DriverInterface *driver, const char *client_name)
     iface_init(interface, driver, interface->driver_state);
     driver->init(interface->driver_state);
     return interface->id;
+}
+
+int create_jack_interface(const char *client_name)
+{
+    return create_interface(&jack_driver, client_name);
 }
 
 void iface_init(

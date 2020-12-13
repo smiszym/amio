@@ -75,19 +75,6 @@ static void jack_set_is_transport_rolling(void *handle, bool value)
     client->is_transport_rolling = value;
 }
 
-static struct DriverInterface jack_driver = {
-    .create_state_object = jack_create_state_object,
-    .init = jack_iface_init,
-    .destroy = jack_destroy,
-    .set_position = jack_set_position,
-    .set_is_transport_rolling = jack_set_is_transport_rolling,
-};
-
-int create_jack_interface(const char *client_name)
-{
-    return create_interface(&jack_driver, client_name);
-}
-
 static int process(jack_nframes_t nframes, void *arg)
 {
     /* Runs on the I/O thread */
@@ -275,3 +262,11 @@ static void jack_iface_init(void *state)
     /* We should handle situations where min!=max, but these are rare */
     jack_interface->total_latency = capture_latency.min + playback_latency.min;
 }
+
+struct DriverInterface jack_driver = {
+    .create_state_object = jack_create_state_object,
+    .init = jack_iface_init,
+    .destroy = jack_destroy,
+    .set_position = jack_set_position,
+    .set_is_transport_rolling = jack_set_is_transport_rolling,
+};
