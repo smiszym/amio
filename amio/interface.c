@@ -112,7 +112,7 @@ void iface_close(int interface_id)
     free(interface->python_thread_queue_buffer);
 }
 
-static void py_thread_destroy_playspec(
+static void py_thread_on_playspec_applied(
     struct Interface *interface, union TaskArgument arg)
 {
     /* Runs on the Python thread */
@@ -171,10 +171,10 @@ static int apply_pending_playspec_if_needed(
         old_playspec->referenced_by_native_code = false;
     new_playspec->referenced_by_native_code = true;
 
-    /* Destroy the old playspec if needed */
+    /* Notify the Python thread that the playspec was applied */
     if (old_playspec) {
         if (!post_task_with_ptr_to_py_thread(
-            state, py_thread_destroy_playspec, old_playspec)) {
+            state, py_thread_on_playspec_applied, old_playspec)) {
             // TODO handle failure
         }
     }
