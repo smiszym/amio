@@ -112,6 +112,32 @@ void iface_close(int interface_id)
     free(interface->python_thread_queue_buffer);
 }
 
+static void py_thread_destroy_playspec(
+    struct Interface *interface, union TaskArgument arg)
+{
+    /* Runs on the Python thread */
+
+    struct Playspec *playspec = arg.pointer;
+    free(playspec->entries);
+    free(playspec);
+}
+
+static void py_thread_receive_current_pos(
+    struct Interface *interface, union TaskArgument arg)
+{
+    /* Runs on the Python thread */
+
+    interface->last_reported_position = arg.integer;
+}
+
+static void py_thread_receive_transport_state(
+    struct Interface *interface, union TaskArgument arg)
+{
+    /* Runs on the Python thread */
+
+    interface->last_reported_is_transport_rolling = arg.integer;
+}
+
 static int apply_pending_playspec_if_needed(
     struct Interface *state,
     int frame_in_playspec,
@@ -246,38 +272,12 @@ void py_thread_destroy_audio_clip(
     free(clip);
 }
 
-void py_thread_destroy_playspec(
-    struct Interface *interface, union TaskArgument arg)
-{
-    /* Runs on the Python thread */
-
-    struct Playspec *playspec = arg.pointer;
-    free(playspec->entries);
-    free(playspec);
-}
-
 void py_thread_receive_frame_rate(
     struct Interface *interface, union TaskArgument arg)
 {
     /* Runs on the Python thread */
 
     interface->last_reported_frame_rate = arg.integer;
-}
-
-void py_thread_receive_current_pos(
-    struct Interface *interface, union TaskArgument arg)
-{
-    /* Runs on the Python thread */
-
-    interface->last_reported_position = arg.integer;
-}
-
-void py_thread_receive_transport_state(
-    struct Interface *interface, union TaskArgument arg)
-{
-    /* Runs on the Python thread */
-
-    interface->last_reported_is_transport_rolling = arg.integer;
 }
 
 void iface_process_messages_on_python_queue(int interface_id)

@@ -74,16 +74,7 @@ void iface_close(int interface_id);
 void py_thread_destroy_audio_clip(
     struct Interface *interface, union TaskArgument arg);
 
-void py_thread_destroy_playspec(
-    struct Interface *interface, union TaskArgument arg);
-
 void py_thread_receive_frame_rate(
-    struct Interface *interface, union TaskArgument arg);
-
-void py_thread_receive_current_pos(
-    struct Interface *interface, union TaskArgument arg);
-
-void py_thread_receive_transport_state(
     struct Interface *interface, union TaskArgument arg);
 
 void iface_process_messages_on_python_queue(int interface_id);
