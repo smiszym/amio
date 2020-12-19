@@ -119,8 +119,8 @@ static int process(jack_nframes_t nframes, void *arg)
 
 static void jack_shutdown(void *arg)
 {
-    // TODO instead of quitting, handle all JACK failures
-    exit(1);
+    struct JackDriverState *state = arg;
+    iface_close(state->interface->id);
 }
 
 static void jack_iface_init(void *driver_state)
@@ -139,21 +139,22 @@ static void jack_iface_init(void *driver_state)
     state->client = jack_client_open(
         state->client_name, options, &status, NULL);
     if (state->client == NULL) {
-        fprintf(stderr, "jack_client_open() failed, "
-            "status = 0x%2.0x\n", status);
+        write_log(state->interface, "jack_client_open() failed\n");
         if (status & JackServerFailed) {
-            fprintf(stderr, "Unable to connect to JACK server\n");
+            write_log(state->interface, "Unable to connect to JACK server\n");
         }
-        exit(1);
+        iface_close(state->interface->id);
+        return;
     }
     if (status & JackServerStarted) {
-        fprintf(stderr, "JACK server started\n");
+        write_log(state->interface, "JACK server started\n");
     }
     if (status & JackNameNotUnique) {
         state->client_name =
             jack_get_client_name(state->client);
-        fprintf(stderr, "Unique name `%s' assigned\n",
-            state->client_name);
+        write_log(state->interface, "Unique name assigned: ");
+        write_log(state->interface, state->client_name);
+        write_log(state->interface, "\n");
     }
 
     post_task_with_int_to_py_thread(
@@ -162,7 +163,7 @@ static void jack_iface_init(void *driver_state)
 
     jack_set_process_callback(
         state->client, process, state);
-    jack_on_shutdown(state->client, jack_shutdown, 0);
+    jack_on_shutdown(state->client, jack_shutdown, state);
 
     state->input_port_l = jack_port_register(
         state->client, "input_l",
@@ -176,8 +177,9 @@ static void jack_iface_init(void *driver_state)
 
     if ((state->input_port_l == NULL)
             || (state->input_port_r == NULL)) {
-        fprintf(stderr, "No more JACK ports available\n");
-        exit(1);
+        write_log(state->interface, "No more JACK ports available\n");
+        iface_close(state->interface->id);
+        return;
     }
 
     state->output_port_l = jack_port_register(
@@ -192,30 +194,33 @@ static void jack_iface_init(void *driver_state)
 
     if ((state->output_port_l == NULL)
             || (state->output_port_r == NULL)) {
-        fprintf(stderr, "No more JACK ports available\n");
-        exit(1);
+        write_log(state->interface, "No more JACK ports available\n");
+        iface_close(state->interface->id);
+        return;
     }
 
     if (jack_activate(state->client)) {
-        fprintf(stderr, "Cannot activate JACK client");
-        exit(1);
+        write_log(state->interface, "Cannot activate JACK client\n");
+        iface_close(state->interface->id);
+        return;
     }
 
     ports = jack_get_ports(state->client, NULL, NULL,
                            JackPortIsPhysical|JackPortIsOutput);
     if (ports == NULL) {
-        fprintf(stderr, "No physical capture ports\n");
-        exit(1);
+        write_log(state->interface, "No physical capture ports\n");
+        iface_close(state->interface->id);
+        return;
     }
 
     if (jack_connect(state->client,
             ports[0], jack_port_name(state->input_port_l))) {
-        fprintf(stderr, "Cannot connect input ports\n");
+        write_log(state->interface, "Cannot connect input ports\n");
     }
 
     if (jack_connect(state->client,
             ports[1], jack_port_name(state->input_port_r))) {
-        fprintf(stderr, "Cannot connect input ports\n");
+        write_log(state->interface, "Cannot connect input ports\n");
     }
 
     /*
@@ -233,18 +238,19 @@ static void jack_iface_init(void *driver_state)
     ports = jack_get_ports(state->client, NULL, NULL,
                            JackPortIsPhysical|JackPortIsInput);
     if (ports == NULL) {
-        fprintf(stderr, "No physical playback ports\n");
-        exit(1);
+        write_log(state->interface, "No physical playback ports\n");
+        iface_close(state->interface->id);
+        return;
     }
 
     if (jack_connect(state->client,
             jack_port_name(state->output_port_l), ports[0])) {
-        fprintf(stderr, "Cannot connect output ports\n");
+        write_log(state->interface, "Cannot connect output ports\n");
     }
 
     if (jack_connect(state->client,
             jack_port_name(state->output_port_r), ports[1])) {
-        fprintf(stderr, "Cannot connect output ports\n");
+        write_log(state->interface, "Cannot connect output ports\n");
     }
 
     /*
