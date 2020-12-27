@@ -104,7 +104,7 @@ static int process(jack_nframes_t nframes, void *arg)
 
     int old_frame = state->frame_in_playspec;
 
-    int new_frame = process_input_output_with_buffers(
+    int new_frame = process_output_with_buffers(
         state->interface,
         state->frame_in_playspec,
         state->is_transport_rolling,

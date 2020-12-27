@@ -374,7 +374,7 @@ void process_input_with_buffers(
     }
 }
 
-jack_nframes_t process_input_output_with_buffers(
+jack_nframes_t process_output_with_buffers(
     struct Interface *state,
     int frame_in_playspec,
     bool is_transport_rolling,
