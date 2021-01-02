@@ -16,7 +16,7 @@ struct AudioClip * AudioClip_init(
     result->length = n / (sizeof(int16_t) * channels);
     result->channels = channels;
     result->framerate = framerate;
-    result->data = (int16_t *)malloc(n);
+    result->data = malloc(n);
     memcpy(result->data, bytes, n);
     return result;
 }
