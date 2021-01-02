@@ -22,6 +22,10 @@ void add_clip_data_to_jack_port(
         pos_b = clip->length;
     }
 
+    /* Clip data is -32768 to +32767, while port data is -1 to +1 */
+    gain_l /= 32768.0;
+    gain_r /= 32768.0;
+
     if (clip->channels >= 2) {
         for (int n = pos_a * clip->channels;
                  n < pos_b * clip->channels;

@@ -297,8 +297,8 @@ static void mix_playspec_entry_into_jack_ports_at(
             entry->audio_clip,
             a_in_clip,
             b_in_clip,
-            entry->gain_l / 32768.0,
-            entry->gain_r / 32768.0);
+            entry->gain_l,
+            entry->gain_r);
     }
 }
 
