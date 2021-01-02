@@ -13,10 +13,11 @@ struct InputChunk
     jack_default_audio_sample_t samples[INPUT_CLIP_LENGTH];
 };
 
-int InputChunk_get_playspec_id(struct InputChunk *clip);
-int InputChunk_get_starting_frame(struct InputChunk *clip);
-int InputChunk_get_was_transport_rolling(struct InputChunk *clip);
-int InputChunk_get_samples(struct InputChunk *clip, char *bytearray, int n);
-void InputChunk_del(struct InputChunk *clip);
+extern struct InputChunk input_chunk_being_read;
+
+int InputChunk_get_playspec_id();
+int InputChunk_get_starting_frame();
+int InputChunk_get_was_transport_rolling();
+int InputChunk_get_samples(char *bytearray, int n);
 
 #endif

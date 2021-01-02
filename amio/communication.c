@@ -65,17 +65,16 @@ bool write_input_samples(
         &interface->input_chunk_queue, input_chunk, 1) == 1;
 }
 
-struct InputChunk * iface_get_input_chunk(int interface_id)
+bool iface_begin_reading_input_chunk(int interface_id)
 {
     /* Runs on the Python thread */
 
     struct Interface *interface = get_interface_by_id(interface_id);
 
-    struct InputChunk *clip = malloc(sizeof(struct InputChunk));
-    if (PaUtil_ReadRingBuffer(&interface->input_chunk_queue, clip, 1) == 1) {
-        return clip;
+    if (PaUtil_ReadRingBuffer(
+            &interface->input_chunk_queue, &input_chunk_being_read, 1) == 1) {
+        return 1;
     } else {
-        free(clip);
-        return NULL;
+        return 0;
     }
 }

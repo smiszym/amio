@@ -57,6 +57,6 @@ void iface_get_logs(int interface_id, char *bytearray, int n);
 
 bool write_input_samples(
     struct Interface *interface, struct InputChunk *input_chunk);
-struct InputChunk * iface_get_input_chunk(int interface_id);
+bool iface_begin_reading_input_chunk(int interface_id);
 
 #endif

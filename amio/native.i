@@ -10,7 +10,6 @@
 #include <stdbool.h>
 
 struct AudioClip;
-struct InputChunk;
 
 /* AudioClip */
 
@@ -20,11 +19,10 @@ void AudioClip_del(int interface, struct AudioClip *clip);
 
 /* InputChunk */
 
-int InputChunk_get_playspec_id(struct InputChunk *clip);
-int InputChunk_get_starting_frame(struct InputChunk *clip);
-int InputChunk_get_was_transport_rolling(struct InputChunk *clip);
-int InputChunk_get_samples(struct InputChunk *clip, char *bytearray, int n);
-void InputChunk_del(struct InputChunk *clip);
+int InputChunk_get_playspec_id();
+int InputChunk_get_starting_frame();
+int InputChunk_get_was_transport_rolling();
+int InputChunk_get_samples(char *bytearray, int n);
 
 /* Playspec */
 
@@ -46,7 +44,7 @@ int iface_get_position(int interface_id);
 void iface_set_position(int interface_id, int position);
 int iface_get_transport_rolling(int interface_id);
 void iface_set_transport_rolling(int interface_id, int rolling);
-struct InputChunk * iface_get_input_chunk(int interface_id);
+bool iface_begin_reading_input_chunk(int interface_id);
 void iface_close(int interface_id);
 
 /* drivers */
@@ -63,11 +61,10 @@ void AudioClip_del(int interface, struct AudioClip *clip);
 
 /* InputChunk */
 
-int InputChunk_get_playspec_id(struct InputChunk *clip);
-int InputChunk_get_starting_frame(struct InputChunk *clip);
-int InputChunk_get_was_transport_rolling(struct InputChunk *clip);
-int InputChunk_get_samples(struct InputChunk *clip, char *bytearray, int n);
-void InputChunk_del(struct InputChunk *clip);
+int InputChunk_get_playspec_id();
+int InputChunk_get_starting_frame();
+int InputChunk_get_was_transport_rolling();
+int InputChunk_get_samples(char *bytearray, int n);
 
 /* Playspec */
 
@@ -89,7 +86,7 @@ int iface_get_position(int interface_id);
 void iface_set_position(int interface_id, int position);
 int iface_get_transport_rolling(int interface_id);
 void iface_set_transport_rolling(int interface_id, int rolling);
-struct InputChunk * iface_get_input_chunk(int interface_id);
+bool iface_begin_reading_input_chunk(int interface_id);
 void iface_close(int interface_id);
 
 /* drivers */

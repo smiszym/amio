@@ -3,41 +3,36 @@
 #include <stdlib.h>
 #include <string.h>
 
-int InputChunk_get_playspec_id(struct InputChunk *clip)
+struct InputChunk input_chunk_being_read;
+
+int InputChunk_get_playspec_id()
 {
     /* Runs on the Python thread */
 
-    return clip->playspec_id;
+    return input_chunk_being_read.playspec_id;
 }
 
-int InputChunk_get_starting_frame(struct InputChunk *clip)
+int InputChunk_get_starting_frame()
 {
     /* Runs on the Python thread */
 
-    return clip->starting_frame;
+    return input_chunk_being_read.starting_frame;
 }
 
-int InputChunk_get_was_transport_rolling(struct InputChunk *clip)
+int InputChunk_get_was_transport_rolling()
 {
     /* Runs on the Python thread */
 
-    return clip->was_transport_rolling;
+    return input_chunk_being_read.was_transport_rolling;
 }
 
-int InputChunk_get_samples(struct InputChunk *clip, char *bytearray, int n)
+int InputChunk_get_samples(char *bytearray, int n)
 {
     /* Runs on the Python thread */
 
     if (n != INPUT_CLIP_LENGTH * sizeof(jack_default_audio_sample_t))
         return 0;
 
-    memcpy(bytearray, clip->samples, n);
+    memcpy(bytearray, input_chunk_being_read.samples, n);
     return 1;
-}
-
-void InputChunk_del(struct InputChunk *clip)
-{
-    /* Runs on the Python thread */
-
-    free(clip);
 }
