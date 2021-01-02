@@ -365,8 +365,10 @@ jack_nframes_t process_input_output_with_buffers(
          * If yes, limit the number of frames to copy.
          */
         if (state->pending_playspec) {
-            frames_to_copy =
+            int ahead_by =
                 state->pending_playspec->insert_at - frame_in_playspec;
+            if (frames_to_copy > ahead_by)
+                frames_to_copy = ahead_by;
             if (frames_to_copy < 0) {
                 start_from_offset = -frames_to_copy;
                 frames_to_copy = 0;
