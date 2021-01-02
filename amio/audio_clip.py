@@ -194,24 +194,21 @@ class AudioClip:
         if abs(self.frame_rate - required_frame_rate) <= epsilon:
             return self
         length_seconds = len(self) / self.frame_rate
-        new_array = (
-            np.transpose(
-                np.array(
-                    [
-                        np.interp(
-                            np.linspace(
-                                0,
-                                length_seconds,
-                                int(len(self) * required_frame_rate / self.frame_rate),
-                            ),
-                            np.linspace(0, length_seconds, len(self)),
-                            self._array[:, i],
-                        )
-                        for i in range(self.channels)
-                    ]
-                )
+        new_array = np.transpose(
+            np.array(
+                [
+                    np.interp(
+                        np.linspace(
+                            0,
+                            length_seconds,
+                            int(len(self) * required_frame_rate / self.frame_rate),
+                        ),
+                        np.linspace(0, length_seconds, len(self)),
+                        self._array[:, i],
+                    )
+                    for i in range(self.channels)
+                ]
             )
-            / 32768
         )
         return AudioClip(new_array, required_frame_rate)
 
