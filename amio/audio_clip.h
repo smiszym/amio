@@ -46,7 +46,7 @@ struct AudioClip
 struct AudioClip * AudioClip_init(
     char *bytes, int n, int channels, float framerate);
 void AudioClip_del(
-    struct JackInterface *jack_interface, struct AudioClip *clip);
+    struct Interface *interface, struct AudioClip *clip);
 
 void io_thread_unref_audio_clip(
     struct Interface *state, struct DriverInterface *driver,

@@ -4,9 +4,6 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-struct JackInterface;
-struct Interface;
-
 struct PlayspecEntry
 {
     /* Audio clip to mix into the output */

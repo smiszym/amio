@@ -48,9 +48,20 @@ struct Interface
      */
     PaUtilRingBuffer input_chunk_queue;
     struct InputChunk *input_chunk_queue_buffer;
+
+    /* Driver talks to audio system such as ALSA, PulseAudio, JACK */
+    struct DriverInterface *driver;
+    void *driver_state;
 };
 
-void iface_init(struct Interface *interface);
+struct Interface * create_interface(
+    struct DriverInterface *driver,
+    const char *client_name);
+
+void iface_init(
+    struct Interface *interface,
+    struct DriverInterface *driver,
+    void *driver_state);
 
 void iface_close(struct Interface *interface);
 
@@ -81,8 +92,6 @@ void process_input_with_buffers(
 
 jack_nframes_t process_input_output_with_buffers(
     struct Interface *state,
-    struct DriverInterface *driver,
-    void *driver_handle,
     int frame_in_playspec,
     bool is_transport_rolling,
     jack_nframes_t nframes,

@@ -1,14 +1,65 @@
 #include "jack_interface.h"
 
+#include <jack/jack.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "audio_clip.h"
 #include "interface.h"
 #include "communication.h"
 #include "mixer.h"
+#include "interface.h"
 #include "playspec.h"
+
+struct JackInterface
+{
+    struct Interface *interface;
+
+    char *client_name;
+
+    jack_client_t *client;
+    jack_port_t *input_port_l;
+    jack_port_t *input_port_r;
+    jack_port_t *output_port_l;
+    jack_port_t *output_port_r;
+
+    int total_latency;
+
+    bool is_transport_rolling;
+    int frame_in_playspec;  /* position in the whole playspec */
+};
+
+static void jack_iface_init(void *state);
+
+static void * jack_create_state_object(
+    const char *client_name, struct Interface *interface)
+{
+    struct JackInterface *state = malloc(sizeof(struct JackInterface));
+
+    state->interface = interface;
+
+    state->client_name = strdup(client_name);
+    state->client = NULL;
+    state->input_port_l = NULL;
+    state->input_port_r = NULL;
+    state->output_port_l = NULL;
+    state->output_port_r = NULL;
+
+    state->total_latency = 0;
+
+    state->is_transport_rolling = false;
+    state->frame_in_playspec = 0;
+    return state;
+}
+
+static void jack_destroy(void *state)
+{
+    struct JackInterface *jack_interface = state;
+    jack_client_close(jack_interface->client);
+    free(jack_interface);
+}
 
 static void jack_set_position(void *handle, int position)
 {
@@ -25,9 +76,17 @@ static void jack_set_is_transport_rolling(void *handle, bool value)
 }
 
 static struct DriverInterface jack_driver = {
+    .create_state_object = jack_create_state_object,
+    .init = jack_iface_init,
+    .destroy = jack_destroy,
     .set_position = jack_set_position,
     .set_is_transport_rolling = jack_set_is_transport_rolling,
 };
+
+struct Interface * create_jack_interface(const char *client_name)
+{
+    return create_interface(&jack_driver, client_name);
+}
 
 static int process(jack_nframes_t nframes, void *arg)
 {
@@ -44,7 +103,7 @@ static int process(jack_nframes_t nframes, void *arg)
         amio_jack_client->input_port_r, nframes);
 
     process_input_with_buffers(
-        &amio_jack_client->interface,
+        amio_jack_client->interface,
         nframes,
         in_buffer_l,
         in_buffer_r,
@@ -59,9 +118,7 @@ static int process(jack_nframes_t nframes, void *arg)
     int old_frame = amio_jack_client->frame_in_playspec;
 
     int new_frame = process_input_output_with_buffers(
-        &amio_jack_client->interface,
-        &jack_driver,
-        amio_jack_client,
+        amio_jack_client->interface,
         amio_jack_client->frame_in_playspec,
         amio_jack_client->is_transport_rolling,
         nframes, out_buffer_l, out_buffer_r);
@@ -79,20 +136,11 @@ static void jack_shutdown(void *arg)
     exit(1);
 }
 
-void jack_iface_process_messages_on_python_queue(
-    struct JackInterface *jack_interface)
-{
-    iface_process_messages_on_python_queue(&jack_interface->interface);
-}
-
-struct JackInterface * jack_iface_init(const char *client_name)
+static void jack_iface_init(void *state)
 {
     /* Runs on the Python thread */
 
-    struct JackInterface *jack_interface = malloc(sizeof(
-                                                     struct JackInterface));
-
-    iface_init(&jack_interface->interface);
+    struct JackInterface *jack_interface = state;
 
     const char **ports;
     jack_options_t options = JackNullOption;
@@ -102,7 +150,7 @@ struct JackInterface * jack_iface_init(const char *client_name)
     jack_interface->frame_in_playspec = 0;
 
     jack_interface->client = jack_client_open(
-        client_name, options, &status, NULL);
+        jack_interface->client_name, options, &status, NULL);
     if (jack_interface->client == NULL) {
         fprintf(stderr, "jack_client_open() failed, "
             "status = 0x%2.0x\n", status);
@@ -115,12 +163,14 @@ struct JackInterface * jack_iface_init(const char *client_name)
         fprintf(stderr, "JACK server started\n");
     }
     if (status & JackNameNotUnique) {
-        client_name = jack_get_client_name(jack_interface->client);
-        fprintf(stderr, "Unique name `%s' assigned\n", client_name);
+        jack_interface->client_name =
+            jack_get_client_name(jack_interface->client);
+        fprintf(stderr, "Unique name `%s' assigned\n",
+            jack_interface->client_name);
     }
 
     post_task_with_int_to_py_thread(
-        &jack_interface->interface, py_thread_receive_frame_rate,
+        jack_interface->interface, py_thread_receive_frame_rate,
         jack_get_sample_rate(jack_interface->client));
 
     jack_set_process_callback(
@@ -224,56 +274,4 @@ struct JackInterface * jack_iface_init(const char *client_name)
 
     /* We should handle situations where min!=max, but these are rare */
     jack_interface->total_latency = capture_latency.min + playback_latency.min;
-
-    return jack_interface;
-}
-
-void jack_iface_close(struct JackInterface *jack_interface)
-{
-    /* Runs on the Python thread */
-
-    jack_client_close(jack_interface->client);
-    iface_close(&jack_interface->interface);
-    free(jack_interface);
-}
-
-void jack_iface_get_logs(
-    struct JackInterface *jack_interface, char *bytearray, int n)
-{
-    iface_get_logs(&jack_interface->interface, bytearray, n);
-}
-
-void jack_iface_set_playspec(struct JackInterface *jack_interface)
-{
-    iface_set_playspec(&jack_interface->interface);
-}
-
-int jack_iface_get_frame_rate(struct JackInterface *jack_interface)
-{
-    return iface_get_frame_rate(&jack_interface->interface);
-}
-
-int jack_iface_get_position(struct JackInterface *jack_interface)
-{
-    return iface_get_position(&jack_interface->interface);
-}
-
-void jack_iface_set_position(struct JackInterface *jack_interface, int position)
-{
-    iface_set_position(&jack_interface->interface, position);
-}
-
-int jack_iface_get_transport_rolling(struct JackInterface *jack_interface)
-{
-    return iface_get_transport_rolling(&jack_interface->interface);
-}
-
-void jack_iface_set_transport_rolling(struct JackInterface *jack_interface, int rolling)
-{
-    iface_set_transport_rolling(&jack_interface->interface, rolling);
-}
-
-struct InputChunk * jack_iface_get_input_chunk(struct JackInterface *jack_interface)
-{
-    return iface_get_input_chunk(&jack_interface->interface);
 }

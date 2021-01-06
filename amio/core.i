@@ -6,27 +6,28 @@
 %pybuffer_mutable_binary(char *bytearray, int n);
 
 %{
+
 #include <stdbool.h>
 
 struct AudioClip;
 struct InputChunk;
-struct JackInterface;
+struct Interface;
 
-/* AudioClip interface */
+/* AudioClip */
 
 struct AudioClip * AudioClip_init(
     char *bytes, int n, int channels, float framerate);
 void AudioClip_del(
-    struct JackInterface *jack_interface, struct AudioClip *clip);
+    struct Interface *interface, struct AudioClip *clip);
 
-/* InputChunk interface */
+/* InputChunk */
 
 int InputChunk_get_starting_frame(struct InputChunk *clip);
 int InputChunk_get_was_transport_rolling(struct InputChunk *clip);
 int InputChunk_get_samples(struct InputChunk *clip, char *bytearray, int n);
 void InputChunk_del(struct InputChunk *clip);
 
-/* Playspec interface */
+/* Playspec */
 
 bool begin_defining_playspec(int size, int insert_at, int start_from);
 void set_entry_in_playspec(
@@ -36,37 +37,41 @@ void set_entry_in_playspec(
     int play_at_frame, int repeat_interval,
     float gain_l, float gain_r);
 
-/* JackInterface interface */
+/* Interface */
 
-void jack_iface_process_messages_on_python_queue(
-    struct JackInterface *jack_interface);
-struct JackInterface * jack_iface_init(const char *client_name);
-void jack_iface_get_logs(struct JackInterface *jack_interface, char *bytearray, int n);
-void jack_iface_set_playspec(struct JackInterface *interface);
-int jack_iface_get_frame_rate(struct JackInterface *interface);
-int jack_iface_get_position(struct JackInterface *interface);
-void jack_iface_set_position(struct JackInterface *interface, int position);
-int jack_iface_get_transport_rolling(struct JackInterface *interface);
-void jack_iface_set_transport_rolling(struct JackInterface *interface, int rolling);
-struct InputChunk * jack_iface_get_input_chunk(struct JackInterface *jack_interface);
-void jack_iface_close(struct JackInterface *jack_interface);
+void iface_process_messages_on_python_queue(
+    struct Interface *jack_interface);
+void iface_get_logs(struct Interface *jack_interface, char *bytearray, int n);
+void iface_set_playspec(struct Interface *interface);
+int iface_get_frame_rate(struct Interface *interface);
+int iface_get_position(struct Interface *interface);
+void iface_set_position(struct Interface *interface, int position);
+int iface_get_transport_rolling(struct Interface *interface);
+void iface_set_transport_rolling(struct Interface *interface, int rolling);
+struct InputChunk * iface_get_input_chunk(struct Interface *jack_interface);
+void iface_close(struct Interface *jack_interface);
+
+/* drivers */
+
+struct Interface * create_jack_interface(const char *client_name);
+
 %}
 
-/* AudioClip interface */
+/* AudioClip */
 
 struct AudioClip * AudioClip_init(
     char *bytes, int n, int channels, float framerate);
 void AudioClip_del(
-    struct JackInterface *jack_interface, struct AudioClip *clip);
+    struct Interface *interface, struct AudioClip *clip);
 
-/* InputChunk interface */
+/* InputChunk */
 
 int InputChunk_get_starting_frame(struct InputChunk *clip);
 int InputChunk_get_was_transport_rolling(struct InputChunk *clip);
 int InputChunk_get_samples(struct InputChunk *clip, char *bytearray, int n);
 void InputChunk_del(struct InputChunk *clip);
 
-/* Playspec interface */
+/* Playspec */
 
 bool begin_defining_playspec(int size, int insert_at, int start_from);
 void set_entry_in_playspec(
@@ -76,17 +81,20 @@ void set_entry_in_playspec(
     int play_at_frame, int repeat_interval,
     float gain_l, float gain_r);
 
-/* JackInterface interface */
+/* Interface */
 
-void jack_iface_process_messages_on_python_queue(
-    struct JackInterface *jack_interface);
-struct JackInterface * jack_iface_init(const char *client_name);
-void jack_iface_get_logs(struct JackInterface *jack_interface, char *bytearray, int n);
-void jack_iface_set_playspec(struct JackInterface *interface);
-int jack_iface_get_frame_rate(struct JackInterface *interface);
-int jack_iface_get_position(struct JackInterface *interface);
-void jack_iface_set_position(struct JackInterface *interface, int position);
-int jack_iface_get_transport_rolling(struct JackInterface *interface);
-void jack_iface_set_transport_rolling(struct JackInterface *interface, int rolling);
-struct InputChunk * jack_iface_get_input_chunk(struct JackInterface *jack_interface);
-void jack_iface_close(struct JackInterface *jack_interface);
+void iface_process_messages_on_python_queue(
+    struct Interface *jack_interface);
+void iface_get_logs(struct Interface *jack_interface, char *bytearray, int n);
+void iface_set_playspec(struct Interface *interface);
+int iface_get_frame_rate(struct Interface *interface);
+int iface_get_position(struct Interface *interface);
+void iface_set_position(struct Interface *interface, int position);
+int iface_get_transport_rolling(struct Interface *interface);
+void iface_set_transport_rolling(struct Interface *interface, int rolling);
+struct InputChunk * iface_get_input_chunk(struct Interface *jack_interface);
+void iface_close(struct Interface *jack_interface);
+
+/* drivers */
+
+struct Interface * create_jack_interface(const char *client_name);

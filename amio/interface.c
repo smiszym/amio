@@ -1,11 +1,28 @@
 #include "interface.h"
 
 #include <stdlib.h>
+#include <string.h>
 
 #include "audio_clip.h"
 #include "mixer.h"
 
-void iface_init(struct Interface *interface)
+struct Interface * create_interface(
+    struct DriverInterface *driver,
+    const char *client_name)
+{
+    struct Interface *interface = malloc(sizeof(struct Interface));
+    interface->driver = driver;
+    interface->driver_state = driver->create_state_object(
+        client_name, interface);
+    iface_init(interface, driver, interface->driver_state);
+    driver->init(interface->driver_state);
+    return interface;
+}
+
+void iface_init(
+    struct Interface *interface,
+    struct DriverInterface *driver,
+    void *driver_state)
 {
     interface->python_thread_queue_buffer = malloc(
         THREAD_QUEUE_SIZE * sizeof(struct Task));
@@ -42,10 +59,14 @@ void iface_init(struct Interface *interface)
     interface->last_reported_frame_rate = -1;
     interface->last_reported_is_transport_rolling = false;
     interface->last_reported_position = -1;
+
+    interface->driver = driver;
+    interface->driver_state = driver_state;
 }
 
 void iface_close(struct Interface *interface)
 {
+    interface->driver->destroy(interface->driver_state);
     free(interface->input_chunk_queue_buffer);
     free(interface->log_queue_buffer);
     free(interface->io_thread_queue_buffer);
@@ -326,8 +347,6 @@ void process_input_with_buffers(
 
 jack_nframes_t process_input_output_with_buffers(
     struct Interface *state,
-    struct DriverInterface *driver,
-    void *driver_handle,
     int frame_in_playspec,
     bool is_transport_rolling,
     jack_nframes_t nframes,
@@ -351,7 +370,8 @@ jack_nframes_t process_input_output_with_buffers(
                 frame_in_playspec - state->pending_playspec->insert_at;
         frame_in_playspec = apply_pending_playspec_if_needed(
             state, frame_in_playspec, start_from_offset);
-        process_messages_on_jack_queue(state, driver, driver_handle);
+        process_messages_on_jack_queue(
+            state, state->driver, state->driver_state);
         return frame_in_playspec;
     }
 
@@ -389,7 +409,7 @@ jack_nframes_t process_input_output_with_buffers(
     }
     clamp_jack_port(port_l, port_r, nframes);
 
-    process_messages_on_jack_queue(state, driver, driver_handle);
+    process_messages_on_jack_queue(state, state->driver, state->driver_state);
 
     return frame_in_playspec;
 }

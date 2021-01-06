@@ -20,13 +20,12 @@ struct AudioClip * AudioClip_init(
     return result;
 }
 
-void AudioClip_del(
-    struct JackInterface *jack_interface, struct AudioClip *clip)
+void AudioClip_del(struct Interface *interface, struct AudioClip *clip)
 {
     /* Runs on the Python thread */
 
     if (!post_task_with_ptr_to_io_thread(
-            &jack_interface->interface, io_thread_unref_audio_clip, clip)) {
+            interface, io_thread_unref_audio_clip, clip)) {
         // TODO handle failure
     }
 }
