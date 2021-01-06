@@ -104,8 +104,7 @@ class JackInterface(Interface):
             playspec: Playspec, insert_at: int, start_from: int) -> None:
         amio._core.begin_defining_playspec(
             len(playspec), insert_at, start_from)
-        self._keepalive_clips: List[Optional[ImmutableAudioClip]] = [
-            None for _ in range(len(playspec))]
+        self._keepalive_clips = [None for _ in range(len(playspec))]
         for n, entry in enumerate(playspec):
             # Storing in the list to keep this ImmutableAudioClip alive
             if isinstance(entry.clip, ImmutableAudioClip):
