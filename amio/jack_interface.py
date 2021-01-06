@@ -103,7 +103,8 @@ class JackInterface(Interface):
     def set_current_playspec(
         self, playspec: Playspec, insert_at: int, start_from: int
     ) -> None:
-        amio._core.begin_defining_playspec(len(playspec), insert_at, start_from)
+        if not amio._core.begin_defining_playspec(len(playspec), insert_at, start_from):
+            raise RuntimeError("AMIO bug: playspec already being defined")
         self._keepalive_clips = [None for _ in range(len(playspec))]
         for n, entry in enumerate(playspec):
             # Storing in the list to keep this ImmutableAudioClip alive

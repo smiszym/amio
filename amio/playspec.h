@@ -66,7 +66,7 @@ struct Playspec
 
 extern struct Playspec *playspec_being_built;
 
-void begin_defining_playspec(int size, int insert_at, int start_from);
+bool begin_defining_playspec(int size, int insert_at, int start_from);
 void set_entry_in_playspec(
     int n,
     struct AudioClip *clip,

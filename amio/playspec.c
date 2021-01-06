@@ -5,9 +5,12 @@
 
 struct Playspec *playspec_being_built = NULL;
 
-void begin_defining_playspec(int size, int insert_at, int start_from)
+bool begin_defining_playspec(int size, int insert_at, int start_from)
 {
     /* Runs on the Python thread */
+
+    if (playspec_being_built)
+        return false;
 
     playspec_being_built = malloc(sizeof(struct Playspec));
     playspec_being_built->num_entries = size;
@@ -25,6 +28,8 @@ void begin_defining_playspec(int size, int insert_at, int start_from)
 
     playspec_being_built->insert_at = insert_at;
     playspec_being_built->start_from = start_from;
+
+    return true;
 }
 
 void set_entry_in_playspec(

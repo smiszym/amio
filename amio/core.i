@@ -6,6 +6,8 @@
 %pybuffer_mutable_binary(char *bytearray, int n);
 
 %{
+#include <stdbool.h>
+
 struct AudioClip;
 struct InputChunk;
 struct JackInterface;
@@ -26,7 +28,7 @@ void InputChunk_del(struct InputChunk *clip);
 
 /* Playspec interface */
 
-void begin_defining_playspec(int size, int insert_at, int start_from);
+bool begin_defining_playspec(int size, int insert_at, int start_from);
 void set_entry_in_playspec(
     int n,
     struct AudioClip *clip,
@@ -66,7 +68,7 @@ void InputChunk_del(struct InputChunk *clip);
 
 /* Playspec interface */
 
-void begin_defining_playspec(int size, int insert_at, int start_from);
+bool begin_defining_playspec(int size, int insert_at, int start_from);
 void set_entry_in_playspec(
     int n,
     struct AudioClip *clip,
