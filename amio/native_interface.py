@@ -13,7 +13,7 @@ from typing import List, Optional
 logger = logging.getLogger("amio")
 
 
-class JackInterface(Interface):
+class NativeInterface(Interface):
     def __init__(self):
         super().__init__()
         self.jack_interface = None

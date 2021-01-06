@@ -27,7 +27,7 @@ class ImmutableAudioClip:
 
     def __init__(
         self,
-        jack_client: "amio.jack_interface.JackInterface",
+        jack_client: "amio.native_interface.NativeInterface",
         data: bytes,
         channels: int,
         frame_rate: float,

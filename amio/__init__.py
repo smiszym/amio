@@ -4,7 +4,7 @@ from amio.playspec import Playspec, PlayspecEntry
 
 from amio.interface import Interface
 from amio.dummy_interface import DummyInterface
-from amio.jack_interface import JackInterface
+from amio.native_interface import NativeInterface
 from amio.null_interface import NullInterface
 
 
@@ -17,6 +17,6 @@ def create_io_interface(driver: str = "jack", **kwargs) -> Interface:
     elif driver == "null":
         return NullInterface(**kwargs)
     elif driver == "jack":
-        return JackInterface()
+        return NativeInterface()
     else:
         raise NotImplementedError("No such AMIO driver")
