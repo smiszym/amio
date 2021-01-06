@@ -24,24 +24,35 @@ class ImmutableAudioClip:
     When ImmutableAudioClip is destroyed, the I/O thread is informed
     and is then free to schedule object destruction when no longer needs it.
     """
-    def __init__(self, jack_client: 'amio.jack_interface.JackInterface',
-                 data: bytes, channels: int, frame_rate: float):
+
+    def __init__(
+        self,
+        jack_client: "amio.jack_interface.JackInterface",
+        data: bytes,
+        channels: int,
+        frame_rate: float,
+    ):
         if not isinstance(channels, int) or channels < 1:
-            raise TypeError(
-                "Invalid number of channels (must be positive integer)")
+            raise TypeError("Invalid number of channels (must be positive integer)")
         self.jack_client = jack_client
-        self.io_owned_clip = amio._core.AudioClip_init(
-            data, channels, frame_rate)
+        self.io_owned_clip = amio._core.AudioClip_init(data, channels, frame_rate)
 
     def __del__(self):
-        amio._core.AudioClip_del(
-            self.jack_client.jack_interface, self.io_owned_clip)
+        amio._core.AudioClip_del(self.jack_client.jack_interface, self.io_owned_clip)
 
-    def use_as_playspec_entry(self, n, frame_a, frame_b, play_at_frame,
-                              repeat_interval, gain_l, gain_r):
+    def use_as_playspec_entry(
+        self, n, frame_a, frame_b, play_at_frame, repeat_interval, gain_l, gain_r
+    ):
         amio._core.set_entry_in_playspec(
-            n, self.io_owned_clip, frame_a, frame_b, play_at_frame,
-            repeat_interval, gain_l, gain_r)
+            n,
+            self.io_owned_clip,
+            frame_a,
+            frame_b,
+            play_at_frame,
+            repeat_interval,
+            gain_l,
+            gain_r,
+        )
 
 
 class AudioClip:
@@ -51,6 +62,7 @@ class AudioClip:
     There is one column in the array for every channel.
     The array datatype is float and the sample range is [-1.0, 1.0].
     """
+
     def __init__(self, array: np.ndarray, frame_rate: float):
         assert isinstance(array, np.ndarray)
         assert np.issubdtype(array.dtype, np.floating)
@@ -69,8 +81,10 @@ class AudioClip:
         return self._array.shape[0]
 
     def __str__(self):
-        return f"{(len(self) / self.frame_rate):.1f} s," \
-               f" {self.calculate_rms_power():.1f} dB AudioClip"
+        return (
+            f"{(len(self) / self.frame_rate):.1f} s,"
+            f" {self.calculate_rms_power():.1f} dB AudioClip"
+        )
 
     @property
     def channels(self) -> int:
@@ -120,18 +134,24 @@ class AudioClip:
     def get_immutable_clip_data(self) -> bytes:
         if self._immutable_clip_data is not None:
             return self._immutable_clip_data
-        calculated = ((self._array * 32767)
-                      .clip(-32767, 32767).astype(np.int16).tobytes())
+        calculated = (
+            (self._array * 32767).clip(-32767, 32767).astype(np.int16).tobytes()
+        )
         if not self._array.flags.writeable:
             self._immutable_clip_data = calculated  # cache the result
         return calculated
 
     def channel(self, channel_number: int) -> AudioClip:
-        return AudioClip(self._array[:,channel_number], self.frame_rate)
+        return AudioClip(self._array[:, channel_number], self.frame_rate)
 
-    def overwrite(self, patch_clip: AudioClip, position: int,
-                  clip_a: int = 0, clip_b: int = -1,
-                  extend_to_fit: bool = False) -> None:
+    def overwrite(
+        self,
+        patch_clip: AudioClip,
+        position: int,
+        clip_a: int = 0,
+        clip_b: int = -1,
+        extend_to_fit: bool = False,
+    ) -> None:
         """
         Overwrite part of this audio clip with patch_clip. By default
         the whole patch_clip is put onto this audio clip, but this can be
@@ -148,7 +168,7 @@ class AudioClip:
         if clip_b == -1:
             clip_b = len(patch_clip)
         if position < 0:
-            clip_a += (-position)
+            clip_a += -position
             position = 0
         inserted_length = clip_b - clip_a
         if inserted_length < 0:
@@ -162,24 +182,37 @@ class AudioClip:
                 to_cut = position + inserted_length - len(self)
                 inserted_length -= to_cut
                 clip_b -= to_cut
-        self._array[position:position+inserted_length,:] = (
-            patch_clip._array[clip_a:clip_b,:])
+        self._array[position : position + inserted_length, :] = patch_clip._array[
+            clip_a:clip_b, :
+        ]
 
-    def resampled_if_needed(self,
-                            required_frame_rate: float,
-                            epsilon: float = 0.1) -> AudioClip:
+    def resampled_if_needed(
+        self, required_frame_rate: float, epsilon: float = 0.1
+    ) -> AudioClip:
         if self.channels != 1:
             raise ValueError("Resampling is only supported for mono clips")
         if abs(self.frame_rate - required_frame_rate) <= epsilon:
             return self
         length_seconds = len(self) / self.frame_rate
-        new_array = (np.transpose(np.array([np.interp(
-            np.linspace(0, length_seconds, int(len(self)
-                                               * required_frame_rate
-                                               / self.frame_rate)),
-            np.linspace(0, length_seconds, len(self)),
-            self._array[:, i]) for i in range(self.channels)]))
-            / 32768)
+        new_array = (
+            np.transpose(
+                np.array(
+                    [
+                        np.interp(
+                            np.linspace(
+                                0,
+                                length_seconds,
+                                int(len(self) * required_frame_rate / self.frame_rate),
+                            ),
+                            np.linspace(0, length_seconds, len(self)),
+                            self._array[:, i],
+                        )
+                        for i in range(self.channels)
+                    ]
+                )
+            )
+            / 32768
+        )
         return AudioClip(new_array, required_frame_rate)
 
     @staticmethod
@@ -192,8 +225,9 @@ class AudioClip:
     def to_soundfile(self, filename) -> None:
         sf.write(filename, self._array, int(self.frame_rate))
 
-    def create_metering_data(self,
-            metering_fps: float = 24) -> Tuple[int, np.ndarray, np.ndarray]:
+    def create_metering_data(
+        self, metering_fps: float = 24
+    ) -> Tuple[int, np.ndarray, np.ndarray]:
         metering_window = self.frame_rate / metering_fps
         num_fragments = int(self._array.shape[0] // metering_window)
         if num_fragments < 1:
@@ -202,10 +236,18 @@ class AudioClip:
 
         def clamp(value):
             return min(max(-127, value), 127)
-        rms = np.array([clamp(factor_to_dB(np.sqrt(np.mean(fragment ** 2))))
-                        for fragment in fragments], np.int8)
-        peak = np.array([clamp(factor_to_dB(np.max(np.abs(fragment))))
-                         for fragment in fragments], np.int8)
+
+        rms = np.array(
+            [
+                clamp(factor_to_dB(np.sqrt(np.mean(fragment ** 2))))
+                for fragment in fragments
+            ],
+            np.int8,
+        )
+        peak = np.array(
+            [clamp(factor_to_dB(np.max(np.abs(fragment)))) for fragment in fragments],
+            np.int8,
+        )
         return num_fragments, rms, peak
 
     def resize(self, new_length: int) -> None:
@@ -221,9 +263,9 @@ class AudioClip:
         elif new_length < current_length:
             self._array = self._array[:new_length]
         else:
-            self._array = np.concatenate((
-                self._array,
-                np.zeros((new_length - current_length, self.channels))))
+            self._array = np.concatenate(
+                (self._array, np.zeros((new_length - current_length, self.channels)))
+            )
 
     def open_in_audacity(self) -> None:
         """
@@ -231,7 +273,7 @@ class AudioClip:
         data to it, and opens it in Audacity. After Audacity process is
         closed, the file is deleted.
         """
-        with NamedTemporaryFile(suffix='.wav') as f:
+        with NamedTemporaryFile(suffix=".wav") as f:
             self.to_soundfile(f)
             f.flush()
             pipe = Popen(["audacity", f.name])
@@ -248,32 +290,39 @@ class AudioClip:
         return AudioClip(np.zeros((length, channels), np.float32), frame_rate)
 
     @staticmethod
-    def sine(frequency: float, amplitude: float, length: int, channels: int,
-             frame_rate: float):
+    def sine(
+        frequency: float,
+        amplitude: float,
+        length: int,
+        channels: int,
+        frame_rate: float,
+    ):
         length_seconds = length / frame_rate
         periods = length_seconds * frequency
         sine = amplitude * np.sin(np.linspace(0, 2 * np.pi * periods, length))
         sine = np.reshape(sine, (length, 1))
-        return AudioClip(np.hstack(channels * (sine, )), frame_rate)
+        return AudioClip(np.hstack(channels * (sine,)), frame_rate)
 
     @staticmethod
     def from_au_file(filename) -> AudioClip:
-        with open(filename, 'rb') as file:
+        with open(filename, "rb") as file:
             data = file.read()
             magic = data[0:4]
             if magic == b".snd":
-                endianness = '>'
+                endianness = ">"
             elif magic == b"dns.":
                 # Audacity incorrectly saves its blockfiles in little-endian
                 # (at least on little-endian processors)
-                endianness = '<'
+                endianness = "<"
             else:
                 raise ValueError("Invalid AU file")
-            header_length, data_size, encoding, frame_rate, channels = \
-                struct.unpack(endianness + 'LLLLL', data[4:24])
+            header_length, data_size, encoding, frame_rate, channels = struct.unpack(
+                endianness + "LLLLL", data[4:24]
+            )
             if encoding != 6:
-                raise ValueError("The only supported encoding is 6 "
-                                 "(32-bit IEEE floating point)")
+                raise ValueError(
+                    "The only supported encoding is 6 " "(32-bit IEEE floating point)"
+                )
             if channels != 1:
                 raise ValueError("Only mono AU files are supported")
 
@@ -283,18 +332,15 @@ class AudioClip:
             return AudioClip(array, frame_rate)
 
     @staticmethod
-    def stereo_clip_from_mono_clips(
-            left: AudioClip, right: AudioClip) -> AudioClip:
+    def stereo_clip_from_mono_clips(left: AudioClip, right: AudioClip) -> AudioClip:
         if left.frame_rate != right.frame_rate:
             raise ValueError("Sample rates must match")
         if left.channels != 1 or right.channels != 1:
             raise ValueError("Both clips must be mono")
-        return AudioClip(
-            np.hstack((left._array, right._array)), left.frame_rate)
+        return AudioClip(np.hstack((left._array, right._array)), left.frame_rate)
 
     @staticmethod
-    def concatenate(
-            sequence_of_clips: Iterable[AudioClip]) -> Optional[AudioClip]:
+    def concatenate(sequence_of_clips: Iterable[AudioClip]) -> Optional[AudioClip]:
         clips = list(sequence_of_clips)
         if len(clips) < 1:
             return None
@@ -303,15 +349,19 @@ class AudioClip:
         if not all(clip.frame_rate == clips[0].frame_rate for clip in clips):
             raise ValueError("All clips must have the same sample rate")
         return AudioClip(
-            np.vstack([clip._array for clip in clips]),
-            clips[0].frame_rate)
+            np.vstack([clip._array for clip in clips]), clips[0].frame_rate
+        )
 
 
 class InputAudioChunk(AudioClip):
     def __init__(
-            self, array: np.ndarray, frame_rate: float,
-            starting_frame: int, was_transport_rolling: bool,
-            wall_time: datetime.datetime):
+        self,
+        array: np.ndarray,
+        frame_rate: float,
+        starting_frame: int,
+        was_transport_rolling: bool,
+        wall_time: datetime.datetime,
+    ):
         super(InputAudioChunk, self).__init__(array, frame_rate)
         self.starting_frame = starting_frame
         self.was_transport_rolling = was_transport_rolling

@@ -4,9 +4,12 @@ from collections import namedtuple
 from typing import List
 
 
-class PlayspecEntry(namedtuple(
-        'PlayspecEntry',
-        'clip frame_a frame_b play_at_frame repeat_interval gain_l gain_r')):
+class PlayspecEntry(
+    namedtuple(
+        "PlayspecEntry",
+        "clip frame_a frame_b play_at_frame repeat_interval gain_l gain_r",
+    )
+):
     @property
     def start(self):
         return self.play_at_frame

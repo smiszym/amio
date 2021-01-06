@@ -15,9 +15,7 @@ def factor_to_dB(factor: float) -> float:
     :param factor: Amplitude factor between two signals
     :return: Power gain between two signals (dB)
     """
-    return (20.0 * math.log10(factor)
-            if factor > sys.float_info.min
-            else float('-inf'))
+    return 20.0 * math.log10(factor) if factor > sys.float_info.min else float("-inf")
 
 
 def dB_to_factor(dB: float) -> float:

@@ -7,6 +7,7 @@ class DummyInterface(Interface):
     requiring no native code. It doesn't have any functionality, but it's
     capable of frame-to-second conversion, so is suitable for use in tests.
     """
+
     def __init__(self, frame_rate: float):
         super().__init__()
         self._frame_rate = frame_rate

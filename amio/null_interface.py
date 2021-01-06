@@ -24,8 +24,12 @@ class NullInterface(Interface):
 
     def advance_single_chunk_length(self) -> None:
         chunk = InputAudioChunk(
-            np.zeros((self.chunk_length, 2), np.float32), self._frame_rate,
-            self._position, self._is_transport_rolling, self._time)
+            np.zeros((self.chunk_length, 2), np.float32),
+            self._frame_rate,
+            self._position,
+            self._is_transport_rolling,
+            self._time,
+        )
         if self._is_transport_rolling:
             self._position += self.chunk_length
         self._time += timedelta(seconds=(self.chunk_length / self._frame_rate))
@@ -54,8 +58,9 @@ class NullInterface(Interface):
         assert not self._closed
         self._is_transport_rolling = rolling
 
-    def set_current_playspec(self,
-            playspec: Playspec, insert_at: int, start_from: int) -> None:
+    def set_current_playspec(
+        self, playspec: Playspec, insert_at: int, start_from: int
+    ) -> None:
         assert not self._closed
         self._playspec = playspec
         self._position = start_from

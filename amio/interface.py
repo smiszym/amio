@@ -42,8 +42,9 @@ class Interface:
     def set_transport_rolling(self, rolling: bool) -> None:
         raise NotImplementedError
 
-    def set_current_playspec(self,
-            playspec: Playspec, insert_at: int, start_from: int) -> None:
+    def set_current_playspec(
+        self, playspec: Playspec, insert_at: int, start_from: int
+    ) -> None:
         raise NotImplementedError
 
     def close(self) -> None:
