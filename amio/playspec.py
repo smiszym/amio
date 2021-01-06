@@ -1,5 +1,5 @@
 from amio.audio_clip import ImmutableAudioClip
-import amio._core
+import amio._native
 from collections import namedtuple
 from typing import List
 

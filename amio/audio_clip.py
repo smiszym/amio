@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import amio._core
+import amio._native
 from amio.fader import factor_to_dB
 import datetime
 import matplotlib.pyplot as plt
@@ -35,15 +35,15 @@ class ImmutableAudioClip:
         if not isinstance(channels, int) or channels < 1:
             raise TypeError("Invalid number of channels (must be positive integer)")
         self.jack_client = jack_client
-        self.io_owned_clip = amio._core.AudioClip_init(data, channels, frame_rate)
+        self.io_owned_clip = amio._native.AudioClip_init(data, channels, frame_rate)
 
     def __del__(self):
-        amio._core.AudioClip_del(self.jack_client.jack_interface, self.io_owned_clip)
+        amio._native.AudioClip_del(self.jack_client.jack_interface, self.io_owned_clip)
 
     def use_as_playspec_entry(
         self, n, frame_a, frame_b, play_at_frame, repeat_interval, gain_l, gain_r
     ):
-        amio._core.set_entry_in_playspec(
+        amio._native.set_entry_in_playspec(
             n,
             self.io_owned_clip,
             frame_a,

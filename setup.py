@@ -32,10 +32,10 @@ else:
     undef_macros = []
 
 
-core_module = Extension(
-    "amio._core",
+native_module = Extension(
+    "amio._native",
     sources=[
-        "amio/core.i",
+        "amio/native.i",
         "amio/audio_clip.c",
         "amio/communication.c",
         "amio/input_chunk.c",
@@ -59,7 +59,7 @@ setup(
     description="""Audio Mixing and Input/Output""",
     license="MIT",
     url="https://github.com/smiszym/amio",
-    ext_modules=[core_module],
+    ext_modules=[native_module],
     packages=["amio"],
     requires=[
         "mypy",

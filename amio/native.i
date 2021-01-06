@@ -1,4 +1,4 @@
-%module core
+%module native
 
 %include <pybuffer.i>
 
