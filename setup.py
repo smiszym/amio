@@ -32,6 +32,7 @@ core_module = Extension(
         "amio/jack_interface.c",
         "amio/mixer.c",
         "amio/playspec.c",
+        "amio/pool.c",
         "amio/pa_ringbuffer.c",
     ],
     libraries=["jack"],
