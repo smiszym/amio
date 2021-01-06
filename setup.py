@@ -21,6 +21,17 @@ def get_version(rel_path):
         raise RuntimeError("Unable to find version string.")
 
 
+# Switch to True to get unoptimized native code with assertions enabled
+debug_variant = False
+
+if debug_variant:
+    extra_compile_args = ["-O0"]
+    undef_macros = ["NDEBUG"]
+else:
+    extra_compile_args = []
+    undef_macros = []
+
+
 core_module = Extension(
     "amio._core",
     sources=[
@@ -36,6 +47,8 @@ core_module = Extension(
         "amio/pa_ringbuffer.c",
     ],
     libraries=["jack"],
+    extra_compile_args=extra_compile_args,
+    undef_macros=undef_macros,
 )
 
 setup(
