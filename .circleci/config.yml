@@ -1,0 +1,55 @@
+version: 2.1
+workflows:
+  build-test:
+    jobs:
+      - build
+      - check-black
+      - mypy
+      - pytest
+
+jobs:
+  build:
+    docker:
+      - image: circleci/python:3.9.0
+    steps:
+      - checkout
+      - run:
+          command: |
+            sudo apt-get -y install libjack-jackd2-dev libsndfile1 swig
+            pip install -e .
+            python setup.py sdist
+            python setup.py bdist_wheel
+
+  mypy:
+    docker:
+      - image: circleci/python:3.9.0
+    steps:
+      - checkout
+      - run:
+          command: |
+            sudo apt-get -y install libjack-jackd2-dev libsndfile1 swig
+            pip install -e .
+            pip install mypy
+            mypy amio/
+
+  check-black:
+    docker:
+      - image: circleci/python:3.9.0
+    steps:
+      - checkout
+      - run:
+          command: |
+            pip install black
+            black --check .
+
+  pytest:
+    docker:
+      - image: circleci/python:3.9.0
+    steps:
+      - checkout
+      - run:
+          command: |
+            sudo apt-get -y install libjack-jackd2-dev libsndfile1 swig
+            pip install -e .
+            pip install pytest
+            pytest
