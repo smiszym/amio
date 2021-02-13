@@ -327,7 +327,7 @@ class AudioClip:
                 raise ValueError("Only mono AU files are supported")
 
             dt = np.dtype(np.float32)
-            dt = dt.newbyteorder(endianness)
+            dt = dt.newbyteorder(endianness)  # type: ignore
             array = np.frombuffer(data[header_length:], dtype=dt)
             return AudioClip(array, frame_rate)
 
