@@ -184,20 +184,24 @@ static int apply_pending_playspec_if_needed(
      * them as no longer referenced.
      */
     if (old_playspec) {
-        for (int i = 0; i < old_playspec->num_entries; ++i)
-            if (old_playspec->entries[i].audio_clip)
-                old_playspec->entries[i].
-                    audio_clip->referenced_by_current_playspec = false;
+        for (int i = 0; i < old_playspec->num_entries; ++i) {
+            struct AudioClip * clip =
+                get_audio_clip_by_id(old_playspec->entries[i].audio_clip_id);
+            if (clip)
+                clip->referenced_by_current_playspec = false;
+        }
     }
 
     /*
      * Iterate over clips referenced by the new playspec and mark
      * them as referenced.
      */
-    for (int i = 0; i < new_playspec->num_entries; ++i)
-        if (new_playspec->entries[i].audio_clip)
-            new_playspec->entries[i].
-                audio_clip->referenced_by_current_playspec = true;
+    for (int i = 0; i < new_playspec->num_entries; ++i) {
+        struct AudioClip * clip =
+                get_audio_clip_by_id(new_playspec->entries[i].audio_clip_id);
+        if (clip)
+            clip->referenced_by_current_playspec = true;
+    }
 
     /*
      * If some clips from the old playspec are not referenced by the new
@@ -205,7 +209,8 @@ static int apply_pending_playspec_if_needed(
      */
     if (old_playspec) {
         for (int i = 0; i < old_playspec->num_entries; ++i) {
-            struct AudioClip *clip = old_playspec->entries[i].audio_clip;
+            struct AudioClip * clip =
+                get_audio_clip_by_id(old_playspec->entries[i].audio_clip_id);
             if (clip &&
                     !clip->referenced_by_current_playspec &&
                     !clip->referenced_by_python) {
@@ -303,6 +308,11 @@ static void mix_playspec_entry_into_jack_ports_at(
 {
     /* Runs on the I/O thread */
 
+    struct AudioClip *clip = get_audio_clip_by_id(entry->audio_clip_id);
+
+    if (!clip)
+        return;
+
     int a_in_clip = entry->clip_frame_a;
     int b_in_clip = entry->clip_frame_b;
 
@@ -324,7 +334,7 @@ static void mix_playspec_entry_into_jack_ports_at(
         int delta = a_in_playspec - frame_in_playspec;
         add_clip_data_to_jack_port(
             port_l + delta, port_r + delta,
-            entry->audio_clip,
+            clip,
             a_in_clip,
             b_in_clip,
             entry->gain_l,
@@ -351,9 +361,6 @@ static void mix_playspec_into_jack_ports(
          entry_number < state->current_playspec->num_entries;
          ++entry_number) {
         struct PlayspecEntry *entry = &state->current_playspec->entries[entry_number];
-
-        if (!entry->audio_clip)
-            continue;
 
         if (entry->repeat_interval == 0) {
             /* No repetitions. */

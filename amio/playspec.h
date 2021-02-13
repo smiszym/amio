@@ -7,7 +7,7 @@
 struct PlayspecEntry
 {
     /* Audio clip to mix into the output */
-    struct AudioClip *audio_clip;
+    int audio_clip_id;
 
     /* Beginning and end of the clip region to use (in frames) */
     int clip_frame_a;
@@ -71,7 +71,7 @@ struct Playspec
 bool begin_defining_playspec(int size, int insert_at, int start_from);
 void set_entry_in_playspec(
     int n,
-    struct AudioClip *clip,
+    int clip_id,
     int clip_frame_a, int clip_frame_b,
     int play_at_frame, int repeat_interval,
     float gain_l, float gain_r);

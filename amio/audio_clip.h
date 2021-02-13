@@ -5,8 +5,7 @@
 #include <stdint.h>
 
 #include "communication.h"
-
-struct Interface;
+#include "interface.h"
 
 /*
  * AudioClip objects are created on the Python thread. When they are fully
@@ -31,6 +30,8 @@ struct Interface;
  */
 struct AudioClip
 {
+    int id;
+
     int length;
     int channels;
     int framerate;
@@ -45,9 +46,10 @@ struct AudioClip
     bool referenced_by_python;
 };
 
-struct AudioClip * AudioClip_init(
-    char *bytes, int n, int channels, float framerate);
-void AudioClip_del(int interface, struct AudioClip *clip);
+struct AudioClip * get_audio_clip_by_id(int id);
+
+int AudioClip_init(char *bytes, int n, int channels, float framerate);
+void AudioClip_del(int interface, int clip_id);
 
 void io_thread_unref_audio_clip(
     struct Interface *state, struct Driver *driver,
