@@ -82,6 +82,13 @@ int pool_put(struct Pool *pool, void *object);
 void * pool_find(struct Pool *pool, int id);
 
 /*
+ * Return the slot number of an object, or -1 if the object doesn't exist
+ * in the pool. If the object is present, 0 <= key < num_slots.
+ * This can be used as a key in associative arrays.
+ */
+int pool_get_key(struct Pool *pool, int id);
+
+/*
  * Call the callback for each object in the pool.
  */
 void pool_for_each(struct Pool *pool, void (*callback)(int id));

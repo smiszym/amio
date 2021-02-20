@@ -33,14 +33,15 @@ void set_entry_in_playspec(
 
 /* Interface */
 
-void iface_process_messages_on_python_queue(int interface_id);
+int iface_process_messages_on_python_queue(int interface_id);
 void iface_get_logs(int interface_id, char *bytearray, int n);
-void iface_set_playspec(int interface_id);
+int iface_set_playspec(int interface_id);
 int iface_get_frame_rate(int interface_id);
 int iface_get_position(int interface_id);
 void iface_set_position(int interface_id, int position);
 int iface_get_transport_rolling(int interface_id);
 void iface_set_transport_rolling(int interface_id, int rolling);
+int iface_get_current_playspec_id(int interface_id);
 bool iface_begin_reading_input_chunk(int interface_id);
 void iface_close(int interface_id);
 
@@ -74,14 +75,15 @@ void set_entry_in_playspec(
 
 /* Interface */
 
-void iface_process_messages_on_python_queue(int interface_id);
+int iface_process_messages_on_python_queue(int interface_id);
 void iface_get_logs(int interface_id, char *bytearray, int n);
-void iface_set_playspec(int interface_id);
+int iface_set_playspec(int interface_id);
 int iface_get_frame_rate(int interface_id);
 int iface_get_position(int interface_id);
 void iface_set_position(int interface_id, int position);
 int iface_get_transport_rolling(int interface_id);
 void iface_set_transport_rolling(int interface_id, int rolling);
+int iface_get_current_playspec_id(int interface_id);
 bool iface_begin_reading_input_chunk(int interface_id);
 void iface_close(int interface_id);
 

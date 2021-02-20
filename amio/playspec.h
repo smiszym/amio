@@ -79,5 +79,6 @@ void set_entry_in_playspec(
 /* API for C code */
 
 struct Playspec * get_built_playspec();
+struct Playspec * create_empty_playspec();
 
 #endif

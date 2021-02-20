@@ -65,3 +65,17 @@ struct Playspec * get_built_playspec()
     playspec_being_built = NULL;
     return result;
 }
+
+struct Playspec * create_empty_playspec()
+{
+    /* Runs on the Python thread */
+
+    struct Playspec *result = malloc(sizeof(struct Playspec));
+    result->num_entries = 0;
+    result->entries = NULL;
+    result->id = next_playspec_id;
+    next_playspec_id += 1;
+    result->insert_at = 0;
+    result->start_from = 0;
+    return result;
+}

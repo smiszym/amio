@@ -46,29 +46,28 @@ void AudioClip_del(int interface, int clip_id)
 {
     /* Runs on the Python thread */
 
-    if (!post_task_with_int_to_io_thread(
-            get_interface_by_id(interface), io_thread_unref_audio_clip, clip_id)) {
-        // TODO handle failure
-    }
-}
-
-void io_thread_unref_audio_clip(
-    struct Interface *state, struct Driver *driver,
-    void *driver_handle, union TaskArgument arg)
-{
-    write_log(state, "I/O thread: Got MSG_UNREF_AUDIO_CLIP\n");
-    int clip_id = arg.integer;
-
     struct AudioClip *clip = get_audio_clip_by_id(clip_id);
     if (!clip)
         return;
 
-    pool_remove(pool, clip_id);
     clip->referenced_by_python = false;
-    if (!clip->referenced_by_current_playspec) {
-        if (!post_task_with_ptr_to_py_thread(
-                state, py_thread_destroy_audio_clip, clip)) {
-            // TODO handle failure
-        }
-    }
+}
+
+void destroy_audio_clip(int audio_clip_id)
+{
+    /* Runs on the Python thread */
+
+    struct AudioClip *clip = get_audio_clip_by_id(audio_clip_id);
+    if (!clip)
+        return;
+
+    pool_remove(pool, audio_clip_id);
+    free(clip->data);
+    free(clip);
+}
+
+void for_each_audio_clip(void (*callback)(int audio_clip_id))
+{
+    ensure_pool_initialized();
+    pool_for_each(pool, callback);
 }

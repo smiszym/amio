@@ -1,9 +1,11 @@
 #include "interface.h"
 
+#include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "audio_clip.h"
+#include "gc.h"
 #include "mixer.h"
 #include "pool.h"
 
@@ -27,6 +29,20 @@ struct Interface * get_interface_by_id(int id)
 
     ensure_pool_initialized();
     return pool_find(pool, id);
+}
+
+int iface_get_key(int interface_id)
+{
+    /* Runs on the Python thread */
+
+    ensure_pool_initialized();
+    return pool_get_key(pool, interface_id);
+}
+
+void for_each_interface(void (*callback)(int interface_id))
+{
+    ensure_pool_initialized();
+    pool_for_each(pool, callback);
 }
 
 int create_interface(struct Driver *driver, const char *client_name)
@@ -88,7 +104,10 @@ void iface_init(
         INPUT_CLIP_QUEUE_SIZE,
         interface->input_chunk_queue_buffer);
 
-    interface->current_playspec = NULL;
+    interface->py_thread_current_playspec = create_empty_playspec();
+    interface->py_thread_pending_playspec = NULL;
+
+    interface->current_playspec = interface->py_thread_current_playspec;
     interface->pending_playspec = NULL;
 
     interface->last_reported_frame_rate = -1;
@@ -112,30 +131,46 @@ void iface_close(int interface_id)
     free(interface->python_thread_queue_buffer);
 }
 
-static void py_thread_on_playspec_applied(
+static int py_thread_on_playspec_applied(
     struct Interface *interface, union TaskArgument arg)
 {
     /* Runs on the Python thread */
 
-    struct Playspec *playspec = arg.pointer;
-    free(playspec->entries);
-    free(playspec);
+    struct Playspec *old_playspec = interface->py_thread_current_playspec;
+    struct Playspec *new_playspec = arg.pointer;
+
+    assert(old_playspec != new_playspec);
+
+    if (old_playspec) {
+        free(old_playspec->entries);
+        free(old_playspec);
+    }
+
+    assert(new_playspec == interface->py_thread_pending_playspec);
+
+    interface->py_thread_current_playspec = new_playspec;
+    interface->py_thread_pending_playspec = NULL;
+
+    gc_audio_clips();
+    return PY_QUEUE_PROCESSING_RESULT_PLAYSPEC_APPLIED;
 }
 
-static void py_thread_receive_current_pos(
+static int py_thread_receive_current_pos(
     struct Interface *interface, union TaskArgument arg)
 {
     /* Runs on the Python thread */
 
     interface->last_reported_position = arg.integer;
+    return 0;
 }
 
-static void py_thread_receive_transport_state(
+static int py_thread_receive_transport_state(
     struct Interface *interface, union TaskArgument arg)
 {
     /* Runs on the Python thread */
 
     interface->last_reported_is_transport_rolling = arg.integer;
+    return 0;
 }
 
 static int apply_pending_playspec_if_needed(
@@ -151,11 +186,7 @@ static int apply_pending_playspec_if_needed(
     if (!new_playspec)
         return frame_in_playspec;  /* nothing to do */
 
-    if (new_playspec == old_playspec) {
-        /* Not sure how this could happen, but let's just ignore it */
-        state->pending_playspec = NULL;
-        return frame_in_playspec;
-    }
+    assert(old_playspec != new_playspec);
 
     if (old_playspec && frame_in_playspec < new_playspec->insert_at)
         return frame_in_playspec;  /* We should wait and change the playspec later */
@@ -172,54 +203,9 @@ static int apply_pending_playspec_if_needed(
     new_playspec->referenced_by_native_code = true;
 
     /* Notify the Python thread that the playspec was applied */
-    if (old_playspec) {
-        if (!post_task_with_ptr_to_py_thread(
-            state, py_thread_on_playspec_applied, old_playspec)) {
-            // TODO handle failure
-        }
-    }
-
-    /*
-     * Iterate over clips referenced by the old playspec and mark
-     * them as no longer referenced.
-     */
-    if (old_playspec) {
-        for (int i = 0; i < old_playspec->num_entries; ++i) {
-            struct AudioClip * clip =
-                get_audio_clip_by_id(old_playspec->entries[i].audio_clip_id);
-            if (clip)
-                clip->referenced_by_current_playspec = false;
-        }
-    }
-
-    /*
-     * Iterate over clips referenced by the new playspec and mark
-     * them as referenced.
-     */
-    for (int i = 0; i < new_playspec->num_entries; ++i) {
-        struct AudioClip * clip =
-                get_audio_clip_by_id(new_playspec->entries[i].audio_clip_id);
-        if (clip)
-            clip->referenced_by_current_playspec = true;
-    }
-
-    /*
-     * If some clips from the old playspec are not referenced by the new
-     * playspec, and also not referenced by Python, they can be destroyed.
-     */
-    if (old_playspec) {
-        for (int i = 0; i < old_playspec->num_entries; ++i) {
-            struct AudioClip * clip =
-                get_audio_clip_by_id(old_playspec->entries[i].audio_clip_id);
-            if (clip &&
-                    !clip->referenced_by_current_playspec &&
-                    !clip->referenced_by_python) {
-                if (!post_task_with_ptr_to_py_thread(
-                    state, py_thread_destroy_audio_clip, clip)) {
-                    // TODO handle failure
-                }
-            }
-        }
+    if (!post_task_with_ptr_to_py_thread(
+        state, py_thread_on_playspec_applied, new_playspec)) {
+        // TODO handle failure
     }
 
     return frame_in_playspec;
@@ -269,23 +255,16 @@ static void process_messages_on_jack_queue(
     }
 }
 
-void py_thread_destroy_audio_clip(
-    struct Interface *interface, union TaskArgument arg)
-{
-    struct AudioClip *clip = arg.pointer;
-    free(clip->data);
-    free(clip);
-}
-
-void py_thread_receive_frame_rate(
+int py_thread_receive_frame_rate(
     struct Interface *interface, union TaskArgument arg)
 {
     /* Runs on the Python thread */
 
     interface->last_reported_frame_rate = arg.integer;
+    return 0;
 }
 
-void iface_process_messages_on_python_queue(int interface_id)
+int iface_process_messages_on_python_queue(int interface_id)
 {
     /* Runs on the Python thread */
 
@@ -294,8 +273,11 @@ void iface_process_messages_on_python_queue(int interface_id)
     struct Task message;
     while (PaUtil_ReadRingBuffer(
             &interface->python_thread_queue, &message, 1) > 0) {
-        message.callable.py_thread_callable(interface, message.arg);
+        int res = message.callable.py_thread_callable(interface, message.arg);
+        if (res)
+            return res;
     }
+    return 0;
 }
 
 static void mix_playspec_entry_into_jack_ports_at(
@@ -485,16 +467,25 @@ jack_nframes_t process_output_with_buffers(
     return frame_in_playspec;
 }
 
-void iface_set_playspec(int interface_id)
+int iface_set_playspec(int interface_id)
 {
     /* Runs on the Python thread */
 
     struct Interface *interface = get_interface_by_id(interface_id);
+    struct Playspec *playspec = get_built_playspec();
+
+    if (interface->py_thread_pending_playspec)
+        return -1;
+
+    interface->py_thread_pending_playspec = playspec;
 
     if (!post_task_with_ptr_to_io_thread(
-            interface, io_thread_set_playspec, get_built_playspec())) {
-        // TODO handle failure
+            interface, io_thread_set_playspec, playspec)) {
+        interface->py_thread_pending_playspec = NULL;
+        return -1;
     }
+
+    return playspec->id;
 }
 
 int iface_get_frame_rate(int interface_id)
@@ -536,4 +527,19 @@ void iface_set_transport_rolling(int interface_id, int rolling)
     struct Interface *interface = get_interface_by_id(interface_id);
     post_task_with_int_to_io_thread(
         interface, io_thread_set_transport_state, rolling);
+}
+
+int iface_get_current_playspec_id(int interface_id)
+{
+    /* Runs on the Python thread */
+
+    struct Interface *interface = get_interface_by_id(interface_id);
+    if (!interface)
+        return -1;
+
+    struct Playspec *playspec = interface->current_playspec;
+    if (!playspec)
+        return -1;
+
+    return playspec->id;
 }

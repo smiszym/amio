@@ -3,6 +3,7 @@ import amio._native
 from amio.interface import Interface, InputChunkCallback
 from amio.playspec import Playspec
 from datetime import datetime
+from enum import Enum
 import logging
 import numpy as np
 import threading
@@ -11,6 +12,11 @@ from typing import List, Optional
 
 
 logger = logging.getLogger("amio")
+
+
+class PythonQueueProcessingResult(Enum):
+    NOTHING = 0
+    PLAYSPEC_APPLIED = 1
 
 
 class NativeInterface(Interface):
@@ -37,7 +43,16 @@ class NativeInterface(Interface):
     def _process_messages_and_print_logs(self) -> None:
         should_stop = False
         while not should_stop:
-            amio._native.iface_process_messages_on_python_queue(self.jack_interface)
+            result = PythonQueueProcessingResult(
+                amio._native.iface_process_messages_on_python_queue(self.jack_interface)
+            )
+            if result == PythonQueueProcessingResult.PLAYSPEC_APPLIED:
+                playspec_id = amio._native.iface_get_current_playspec_id(
+                    self.jack_interface
+                )
+                if playspec_id >= 0:
+                    self._on_playspec_applied(playspec_id)
+                self._retry_setting_playspec_if_needed()
             self._collect_and_print_logs()
             while True:
                 input_chunk = self._get_next_input_chunk()
@@ -100,9 +115,9 @@ class NativeInterface(Interface):
             interface_frame_rate,
         )
 
-    def set_current_playspec(
+    def _set_current_playspec(
         self, playspec: Playspec, insert_at: int, start_from: int
-    ) -> None:
+    ) -> Optional[int]:
         if not amio._native.begin_defining_playspec(
             len(playspec), insert_at, start_from
         ):
@@ -135,7 +150,12 @@ class NativeInterface(Interface):
                 )
             else:
                 raise ValueError("Wrong audio clip type")
-        amio._native.iface_set_playspec(self.jack_interface)
+        playspec_id = amio._native.iface_set_playspec(self.jack_interface)
+        if playspec_id < 0:
+            # Failed to set playspec; most probably the previously set
+            # playspec was not yet applied. We should retry later.
+            return None
+        return playspec_id
 
     def close(self) -> None:
         with self.should_stop_lock:

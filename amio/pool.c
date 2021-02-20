@@ -63,6 +63,17 @@ void * pool_find(struct Pool *pool, int id)
     return slot->object;
 }
 
+int pool_get_key(struct Pool *pool, int id)
+{
+    int slot_number = id % pool->num_slots;
+    struct Slot *slot = &pool->slots[slot_number];
+    if (!slot->allocated)
+        return -1;
+    if (slot->id != id)
+        return -1;
+    return slot_number;
+}
+
 void pool_for_each(struct Pool *pool, void (*callback)(int id))
 {
     for (int i = 0; i < pool->num_slots; ++i) {

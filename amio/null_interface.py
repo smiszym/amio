@@ -24,6 +24,7 @@ class NullInterface(Interface):
         self._time = starting_time or datetime.now()
 
     def advance_single_chunk_length(self) -> None:
+        self._on_playspec_applied(self._current_playspec_id)
         chunk = InputAudioChunk(
             np.zeros((self.chunk_length, 2), np.float32),
             self._frame_rate,
@@ -60,7 +61,7 @@ class NullInterface(Interface):
         assert not self._closed
         self._is_transport_rolling = rolling
 
-    def set_current_playspec(
+    def _set_current_playspec(
         self, playspec: Playspec, insert_at: int, start_from: int
     ) -> None:
         assert not self._closed

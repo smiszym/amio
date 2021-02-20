@@ -37,11 +37,13 @@ struct AudioClip
     int framerate;
     int16_t *data;
 
+    /* The following fields are only accessed from the Python thread */
+
     /*
-     * Indicator whether the playspec currently played by the I/O thread
-     * has a reference to this clip
+     * Indicator whether the playspec currently in the playspec queue
+     * on the I/O thread might have a reference to this clip
      */
-    bool referenced_by_current_playspec;
+    bool referenced_by_io_thread[MAX_INTERFACES];
     /* Indicator whether Python has a reference to this clip */
     bool referenced_by_python;
 };
@@ -51,8 +53,8 @@ struct AudioClip * get_audio_clip_by_id(int id);
 int AudioClip_init(char *bytes, int n, int channels, float framerate);
 void AudioClip_del(int interface, int clip_id);
 
-void io_thread_unref_audio_clip(
-    struct Interface *state, struct Driver *driver,
-    void *driver_handle, union TaskArgument arg);
+void destroy_audio_clip(int audio_clip_id);
+
+void for_each_audio_clip(void (*callback)(int audio_clip_id));
 
 #endif

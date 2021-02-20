@@ -38,6 +38,7 @@ native_module = Extension(
         "amio/native.i",
         "amio/audio_clip.c",
         "amio/communication.c",
+        "amio/gc.c",
         "amio/input_chunk.c",
         "amio/interface.c",
         "amio/jack_driver.c",

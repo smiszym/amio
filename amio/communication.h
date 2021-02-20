@@ -23,7 +23,7 @@ typedef void (*IoThreadCallable)(
     void *driver_handle,
     union TaskArgument arg);
 
-typedef void (*PyThreadCallable)(
+typedef int (*PyThreadCallable)(
     struct Interface *interface,
     union TaskArgument arg);
 
