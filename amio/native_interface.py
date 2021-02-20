@@ -154,6 +154,7 @@ class NativeInterface(Interface):
         buf = bytearray(128 * 4)  # 128 float samples
         if amio._native.InputChunk_get_samples(input_chunk, buf) == 0:
             raise AssertionError("AMIO bug: invalid buffer length")
+        playspec_id = amio._native.InputChunk_get_playspec_id(input_chunk)
         starting_frame = amio._native.InputChunk_get_starting_frame(input_chunk)
         was_transport_rolling = (
             amio._native.InputChunk_get_was_transport_rolling(input_chunk) != 0
@@ -163,5 +164,10 @@ class NativeInterface(Interface):
         array = np.reshape(array, (array.shape[0] // 2, 2))
         frame_rate = self.get_frame_rate()
         return InputAudioChunk(
-            array, frame_rate, starting_frame, was_transport_rolling, datetime.now()
+            array,
+            frame_rate,
+            playspec_id,
+            starting_frame,
+            was_transport_rolling,
+            datetime.now(),
         )

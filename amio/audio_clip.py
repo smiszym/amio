@@ -358,11 +358,13 @@ class InputAudioChunk(AudioClip):
         self,
         array: np.ndarray,
         frame_rate: float,
+        playspec_id: int,
         starting_frame: int,
         was_transport_rolling: bool,
         wall_time: datetime.datetime,
     ):
         super(InputAudioChunk, self).__init__(array, frame_rate)
+        self.playspec_id = playspec_id
         self.starting_frame = starting_frame
         self.was_transport_rolling = was_transport_rolling
         self.wall_time = wall_time

@@ -3,6 +3,13 @@
 #include <stdlib.h>
 #include <string.h>
 
+int InputChunk_get_playspec_id(struct InputChunk *clip)
+{
+    /* Runs on the Python thread */
+
+    return clip->playspec_id;
+}
+
 int InputChunk_get_starting_frame(struct InputChunk *clip)
 {
     /* Runs on the Python thread */

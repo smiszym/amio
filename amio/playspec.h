@@ -39,6 +39,11 @@ struct Playspec
     struct PlayspecEntry *entries;
 
     /*
+     * Playspec tracking id.
+     */
+    int id;
+
+    /*
      * Time in frames, counted from the beginning of the previous
      * playspec, at which to insert this playspec. Only read by the JACK
      * thread when swapping playspecs.

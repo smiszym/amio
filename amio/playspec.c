@@ -5,6 +5,8 @@
 
 static struct Playspec *playspec_being_built = NULL;
 
+static int next_playspec_id = 1;
+
 bool begin_defining_playspec(int size, int insert_at, int start_from)
 {
     /* Runs on the Python thread */
@@ -26,6 +28,8 @@ bool begin_defining_playspec(int size, int insert_at, int start_from)
         playspec_being_built->entries[i].gain_r = 1.0;
     }
 
+    playspec_being_built->id = next_playspec_id;
+    next_playspec_id += 1;
     playspec_being_built->insert_at = insert_at;
     playspec_being_built->start_from = start_from;
 

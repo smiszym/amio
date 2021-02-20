@@ -398,6 +398,7 @@ void process_input_with_buffers(
     jack_nframes_t clip_i;
     jack_nframes_t buffer_i = 0;
     while (buffer_i < nframes) {
+        clip.playspec_id = interface->current_playspec->id;
         clip.starting_frame = starting_frame + buffer_i;
         clip.was_transport_rolling = transport_state;
         for (clip_i = 0; clip_i < INPUT_CLIP_LENGTH / 2; ++clip_i, ++buffer_i) {

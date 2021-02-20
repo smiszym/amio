@@ -17,6 +17,7 @@ class NullInterface(Interface):
         super().__init__()
         self._frame_rate = frame_rate
         self._position = 0
+        self._current_playspec_id = 1
         self._is_transport_rolling = False
         self._playspec: Playspec = []
         self._closed = False
@@ -26,6 +27,7 @@ class NullInterface(Interface):
         chunk = InputAudioChunk(
             np.zeros((self.chunk_length, 2), np.float32),
             self._frame_rate,
+            self._current_playspec_id,
             self._position,
             self._is_transport_rolling,
             self._time,
@@ -64,6 +66,7 @@ class NullInterface(Interface):
         assert not self._closed
         self._playspec = playspec
         self._position = start_from
+        self._current_playspec_id += 1
         # TODO Support insert_at
 
     def close(self) -> None:

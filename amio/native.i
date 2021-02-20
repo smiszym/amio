@@ -20,6 +20,7 @@ void AudioClip_del(int interface, struct AudioClip *clip);
 
 /* InputChunk */
 
+int InputChunk_get_playspec_id(struct InputChunk *clip);
 int InputChunk_get_starting_frame(struct InputChunk *clip);
 int InputChunk_get_was_transport_rolling(struct InputChunk *clip);
 int InputChunk_get_samples(struct InputChunk *clip, char *bytearray, int n);
@@ -62,6 +63,7 @@ void AudioClip_del(int interface, struct AudioClip *clip);
 
 /* InputChunk */
 
+int InputChunk_get_playspec_id(struct InputChunk *clip);
 int InputChunk_get_starting_frame(struct InputChunk *clip);
 int InputChunk_get_was_transport_rolling(struct InputChunk *clip);
 int InputChunk_get_samples(struct InputChunk *clip, char *bytearray, int n);
