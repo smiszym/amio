@@ -70,7 +70,7 @@ class NullInterface(Interface):
         self._current_playspec_id += 1
         # TODO Support insert_at
 
-    def close(self) -> None:
+    async def close(self) -> None:
         assert not self._closed
         self._closed = True
 

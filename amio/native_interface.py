@@ -1,13 +1,13 @@
+import asyncio
+
 from amio.audio_clip import ImmutableAudioClip, InputAudioChunk, AudioClip
 import amio._native
-from amio.interface import Interface, InputChunkCallback
+from amio.interface import Interface
 from amio.playspec import Playspec
 from datetime import datetime
 from enum import Enum
 import logging
 import numpy as np
-import threading
-from time import sleep
 from typing import List, Optional
 
 
@@ -23,46 +23,43 @@ class NativeInterface(Interface):
     def __init__(self):
         super().__init__()
         self.jack_interface = None
-        self.message_thread = None
+        self.message_task = None
         self._keepalive_clips: List[Optional[ImmutableAudioClip]] = []
-        self.should_stop = False
-        self.should_stop_lock = threading.Lock()
         self._pending_logs = ""
 
-    def init(self, client_name: str) -> None:
+    async def init(self, client_name: str) -> None:
         if self.jack_interface is not None:
             raise ValueError(
                 "Attempt to initialize an already initialized AMIO interface"
             )
         self.jack_interface = amio._native.create_jack_interface(client_name)
-        self.message_thread = threading.Thread(
-            target=self._process_messages_and_print_logs, name="Python message thread"
-        )
-        self.message_thread.start()
+        self.message_task = asyncio.create_task(self._process_messages_and_print_logs())
 
-    def _process_messages_and_print_logs(self) -> None:
-        should_stop = False
-        while not should_stop:
-            result = PythonQueueProcessingResult(
-                amio._native.iface_process_messages_on_python_queue(self.jack_interface)
-            )
-            if result == PythonQueueProcessingResult.PLAYSPEC_APPLIED:
-                playspec_id = amio._native.iface_get_current_playspec_id(
-                    self.jack_interface
-                )
-                if playspec_id >= 0:
-                    self._on_playspec_applied(playspec_id)
-                self._retry_setting_playspec_if_needed()
-            self._collect_and_print_logs()
+    async def _process_messages_and_print_logs(self) -> None:
+        try:
             while True:
-                input_chunk = self._get_next_input_chunk()
-                if input_chunk is not None:
-                    self._notify_input_chunk(input_chunk)
-                if input_chunk is None:
-                    break
-            sleep(0.1)
-            with self.should_stop_lock:
-                should_stop = self.should_stop
+                result = PythonQueueProcessingResult(
+                    amio._native.iface_process_messages_on_python_queue(
+                        self.jack_interface
+                    )
+                )
+                if result == PythonQueueProcessingResult.PLAYSPEC_APPLIED:
+                    playspec_id = amio._native.iface_get_current_playspec_id(
+                        self.jack_interface
+                    )
+                    if playspec_id >= 0:
+                        self._on_playspec_applied(playspec_id)
+                    self._retry_setting_playspec_if_needed()
+                self._collect_and_print_logs()
+                while True:
+                    input_chunk = self._get_next_input_chunk()
+                    if input_chunk is not None:
+                        self._notify_input_chunk(input_chunk)
+                    if input_chunk is None:
+                        break
+                await asyncio.sleep(0.1)
+        except asyncio.CancelledError:
+            pass
 
     def _collect_and_print_logs(self) -> None:
         # Get any new logs from the IO thread.
@@ -157,15 +154,13 @@ class NativeInterface(Interface):
             return None
         return playspec_id
 
-    def close(self) -> None:
-        with self.should_stop_lock:
-            self.should_stop = True
-        self.message_thread.join()
+    async def close(self) -> None:
+        self.message_task.cancel()
+        await self.message_task
         amio._native.iface_close(self.jack_interface)
 
     def is_closed(self) -> bool:
-        with self.should_stop_lock:
-            return self.should_stop
+        return self.message_task is None
 
     def _get_next_input_chunk(self) -> Optional[InputAudioChunk]:
         success = amio._native.iface_begin_reading_input_chunk(self.jack_interface)

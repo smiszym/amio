@@ -60,7 +60,7 @@ class Interface:
     def frame_to_secs(self, frame: int) -> float:
         return frame / self.get_frame_rate()
 
-    def init(self, client_name: str) -> None:
+    async def init(self, client_name: str) -> None:
         raise NotImplementedError
 
     def get_frame_rate(self) -> float:
@@ -83,7 +83,7 @@ class Interface:
     ) -> Optional[int]:
         raise NotImplementedError
 
-    def close(self) -> None:
+    async def close(self) -> None:
         raise NotImplementedError
 
     def is_closed(self) -> bool:
