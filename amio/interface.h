@@ -74,11 +74,6 @@ int create_interface(struct Driver *driver, const char *client_name);
 
 int create_jack_interface(const char *client_name);
 
-void iface_init(
-    struct Interface *interface,
-    struct Driver *driver,
-    void *driver_state);
-
 void iface_close(int interface_id);
 
 int py_thread_receive_frame_rate(

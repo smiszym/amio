@@ -56,24 +56,6 @@ int create_interface(struct Driver *driver, const char *client_name)
     interface->driver = driver;
     interface->driver_state = driver->create_state_object(
         client_name, interface);
-    iface_init(interface, driver, interface->driver_state);
-    driver->init(interface->driver_state);
-    return interface->id;
-}
-
-int create_jack_interface(const char *client_name)
-{
-    /* Runs on the Python thread */
-
-    return create_interface(&jack_driver, client_name);
-}
-
-void iface_init(
-    struct Interface *interface,
-    struct Driver *driver,
-    void *driver_state)
-{
-    /* Runs on the Python thread */
 
     interface->python_thread_queue_buffer = malloc(
         THREAD_QUEUE_SIZE * sizeof(struct Task));
@@ -114,8 +96,15 @@ void iface_init(
     interface->last_reported_is_transport_rolling = false;
     interface->last_reported_position = -1;
 
-    interface->driver = driver;
-    interface->driver_state = driver_state;
+    driver->init(interface->driver_state);
+    return interface->id;
+}
+
+int create_jack_interface(const char *client_name)
+{
+    /* Runs on the Python thread */
+
+    return create_interface(&jack_driver, client_name);
 }
 
 void iface_close(int interface_id)
