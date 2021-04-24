@@ -244,15 +244,6 @@ static void process_messages_on_jack_queue(
     }
 }
 
-int py_thread_receive_frame_rate(
-    struct Interface *interface, union TaskArgument arg)
-{
-    /* Runs on the Python thread */
-
-    interface->last_reported_frame_rate = arg.integer;
-    return 0;
-}
-
 int iface_process_messages_on_python_queue(int interface_id)
 {
     /* Runs on the Python thread */

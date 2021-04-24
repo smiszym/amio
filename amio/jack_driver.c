@@ -157,9 +157,8 @@ static void jack_iface_init(void *driver_state)
         write_log(state->interface, "\n");
     }
 
-    post_task_with_int_to_py_thread(
-        state->interface, py_thread_receive_frame_rate,
-        jack_get_sample_rate(state->client));
+    state->interface->last_reported_frame_rate = jack_get_sample_rate(
+        state->client);
 
     jack_set_process_callback(
         state->client, process, state);

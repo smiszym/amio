@@ -76,9 +76,6 @@ int create_jack_interface(const char *client_name);
 
 void iface_close(int interface_id);
 
-int py_thread_receive_frame_rate(
-    struct Interface *interface, union TaskArgument arg);
-
 #define PY_QUEUE_PROCESSING_RESULT_NOTHING 0
 #define PY_QUEUE_PROCESSING_RESULT_PLAYSPEC_APPLIED 1
 int iface_process_messages_on_python_queue(int interface_id);
