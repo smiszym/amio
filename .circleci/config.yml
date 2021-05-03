@@ -11,14 +11,19 @@ jobs:
   build:
     docker:
       - image: circleci/python:3.9.0
+    environment:
+      # only build for CPython 3.x
+      CIBW_BUILD: cp3*-*
+      CIBW_BEFORE_ALL_LINUX: "yum install -y jack-audio-connection-kit-devel libsndfile swig"
     steps:
       - checkout
+      - setup_remote_docker
       - run:
           command: |
-            sudo apt-get -y install libjack-jackd2-dev libsndfile1 swig
-            pip install -e .
-            python setup.py sdist
-            python setup.py bdist_wheel
+            pip install --user cibuildwheel==1.11.0
+            cibuildwheel --output-dir wheelhouse
+      - store_artifacts:
+          path: wheelhouse/
 
   mypy:
     docker:
