@@ -16,9 +16,9 @@ jobs:
       - run:
           command: |
             sudo apt-get -y install libjack-jackd2-dev libsndfile1 swig
-            pip install -e .
             python setup.py sdist
-            python setup.py bdist_wheel
+      - store_artifacts:
+          path: dist/
 
   mypy:
     docker:
