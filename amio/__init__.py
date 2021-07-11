@@ -8,7 +8,7 @@ from amio.native_interface import NativeInterface
 from amio.null_interface import NullInterface
 
 
-__version__ = "0.1.1"
+__version__ = "0.1.2-dev"
 
 
 def create_io_interface(driver: str = "jack", **kwargs) -> Interface:
