@@ -75,7 +75,7 @@ class AudioClip:
         else:
             raise ValueError("Incorrect array shape (must be 1D or 2D)")
         self.frame_rate = frame_rate
-        self._immutable_clip_data = None
+        self._immutable_clip_data: Optional[bytes] = None
 
     def __len__(self):
         return self._array.shape[0]
