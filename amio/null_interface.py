@@ -1,7 +1,7 @@
 from amio.audio_clip import InputAudioChunk
 from amio.interface import Interface, InputChunkCallback
 from amio.playspec import Playspec
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import numpy as np
 
 
@@ -21,7 +21,7 @@ class NullInterface(Interface):
         self._is_transport_rolling = False
         self._playspec: Playspec = []
         self._closed = False
-        self._time = starting_time or datetime.now()
+        self._time = starting_time or datetime.now(timezone.utc)
 
     def advance_single_chunk_length(self) -> None:
         self._on_playspec_applied(self._current_playspec_id)

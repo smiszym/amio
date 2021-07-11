@@ -4,7 +4,7 @@ from amio.audio_clip import ImmutableAudioClip, InputAudioChunk, AudioClip
 import amio._native
 from amio.interface import Interface
 from amio.playspec import Playspec
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 import logging
 import numpy as np
@@ -181,5 +181,5 @@ class NativeInterface(Interface):
             playspec_id,
             starting_frame,
             was_transport_rolling,
-            datetime.now(),
+            datetime.now(timezone.utc),
         )
