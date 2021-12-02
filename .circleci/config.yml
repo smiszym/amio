@@ -10,31 +10,33 @@ workflows:
 jobs:
   build:
     docker:
-      - image: circleci/python:3.9.0
+      - image: cimg/python:3.9
     steps:
       - checkout
       - run:
           command: |
-            sudo apt-get -y install libjack-jackd2-dev libsndfile1 swig
+            sudo apt update
+            sudo apt -y install libjack-jackd2-dev libsndfile1 swig
             python setup.py sdist
       - store_artifacts:
           path: dist/
 
   mypy:
     docker:
-      - image: circleci/python:3.9.0
+      - image: cimg/python:3.9
     steps:
       - checkout
       - run:
           command: |
-            sudo apt-get -y install libjack-jackd2-dev libsndfile1 swig
+            sudo apt update
+            sudo apt -y install libjack-jackd2-dev libsndfile1 swig
             pip install -e .
             pip install mypy
             mypy amio/
 
   check-black:
     docker:
-      - image: circleci/python:3.9.0
+      - image: cimg/python:3.9
     steps:
       - checkout
       - run:
@@ -44,12 +46,13 @@ jobs:
 
   pytest:
     docker:
-      - image: circleci/python:3.9.0
+      - image: cimg/python:3.9
     steps:
       - checkout
       - run:
           command: |
-            sudo apt-get -y install libjack-jackd2-dev libsndfile1 swig
+            sudo apt update
+            sudo apt -y install libjack-jackd2-dev libsndfile1 swig
             pip install -e .
             pip install pytest
             pytest
